@@ -552,7 +552,7 @@
   function abrirPorDefecto(){
     const r=F.reclamo; ABIERTAS={};
     if(r.estado!=="abierto" && r.estado!=="en_pausa") return;
-    if(r.etapa===5 && !r.fecha_programada) ABIERTAS[5]=true; else ABIERTAS[Math.min(7, r.etapa+1)]=true;
+    if(r.etapa===5 && !r.fecha_programada && !r.trabajo_iniciado) ABIERTAS[5]=true; else ABIERTAS[Math.min(7, r.etapa+1)]=true;
   }
   /** Después de guardar: toma la ficha nueva, deja abierta la etapa que sigue y refresca el tablero. */
   function usarFicha(res, mensajeOk, aviso){
@@ -579,7 +579,7 @@
       return fechaCorta(r.fecha_presupuestado)+" · "+(r.sin_presupuesto?"sin presupuesto ("+r.sin_presupuesto_motivo+")":plural(rec,"presupuesto recibido","presupuestos recibidos")); }
     if(n===4){ const p=F.presupuestos.filter(x=>x.id_presupuesto===r.id_presupuesto_elegido)[0];
       return fechaCorta(r.aprob_fecha)+" · "+(p?p.proveedor+" · ":"")+(r.monto_aprobado!==""?pesos(r.monto_aprobado)+" · ":"")+"aprobó "+r.aprob_quien+" por "+r.aprob_medio.toLowerCase(); }
-    if(n===5) return fechaCorta(r.fecha_asignacion)+" · "+F.reclamo.vista.proveedor+(r.fecha_programada?" · inicio programado "+fechaCorta(r.fecha_programada):" · sin fecha de inicio")+(r.trabajo_iniciado?" · trabajo iniciado "+fechaCorta(r.fecha_inicio):"");
+    if(n===5) return fechaCorta(r.fecha_asignacion)+" · "+F.reclamo.vista.proveedor+(r.fecha_programada?" · inicio programado "+fechaCorta(r.fecha_programada):(r.trabajo_iniciado?"":" · sin fecha de inicio"))+(r.trabajo_iniciado?" · trabajo iniciado "+fechaCorta(r.fecha_inicio):"");
     if(n===6) return fechaCorta(r.fecha_fin)+" · "+r.verificacion.toLowerCase();
     if(n===7) return fechaCorta(r.fecha_cierre)+" · costo final "+pesos(r.costo_final)+" · conformidad: "+String(r.conformidad).toLowerCase();
     return "";
@@ -732,21 +732,24 @@
     }
     if(n===5){
       const pEleg=F.presupuestos.filter(p=>p.id_presupuesto===r.id_presupuesto_elegido)[0];
-      const delInq=r.etapa<5 && r.sin_presupuesto && /inquilino/i.test(r.sin_presupuesto_motivo);
-      const esTexto=r.proveedor_texto!=="" || delInq;
+      // Arreglo del inquilino con su proveedor: nada es obligatorio salvo "trabajo iniciado".
+      const delInq=r.sin_presupuesto && String(r.sin_presupuesto_motivo).indexOf(CFG.motivosSinPresupuesto[0])===0;
+      const esTexto=r.proveedor_texto!=="" || (delInq && r.etapa<5);
+      const op=delInq?" (opcional)":"";
       const actualProv=r.proveedor_id || (r.etapa<5&&pEleg?pEleg.proveedor_id:"");
-      return `<div class="grid">
-          ${campo("sProv","Proveedor asignado",`<select id="sProv" class="i">${provOpciones(r.rubro_id, esTexto?"":actualProv)}<option value="__texto" ${esTexto?"selected":""}>Proveedor del inquilino (escribir)</option></select>`)}
-          <div id="sTxtW" ${esTexto?"":"hidden"}>${inp("sTxt","Nombre del proveedor del inquilino",r.proveedor_texto)}</div>
-          ${fec("sAsig","Fecha de asignación",r.fecha_asignacion||HOY)}
-          ${fec("sProg","Fecha programada de inicio",r.fecha_programada)}
+      return `${delInq?'<div class="aviso azul">Arreglo del inquilino con su proveedor: la responsabilidad es del inquilino. En esta etapa solo es obligatorio tildar <b>Trabajo iniciado</b>; el resto es opcional.</div>':""}
+        <div class="grid">
+          ${campo("sProv","Proveedor asignado"+op,`<select id="sProv" class="i">${provOpciones(r.rubro_id, esTexto?"":actualProv)}<option value="__texto" ${esTexto?"selected":""}>Proveedor del inquilino (escribir)</option></select>`)}
+          <div id="sTxtW" ${esTexto?"":"hidden"}>${inp("sTxt","Nombre del proveedor del inquilino"+op,r.proveedor_texto)}</div>
+          ${fec("sAsig","Fecha de asignación"+op,r.fecha_asignacion||HOY)}
+          ${fec("sProg","Fecha programada de inicio"+op,r.fecha_programada)}
           ${fec("sFin","Fecha estimada de finalización (opcional)",r.fecha_estimada_fin)}
         </div>
         <div id="sMotW" hidden>${inp("sMot","Motivo del cambio de proveedor","")}</div>
         ${inp("sAcc","Coordinación de acceso",r.acceso,'placeholder="Horario, quién abre, a quién avisar"')}
         <label class="chk"><input type="checkbox" id="sLlaves" ${r.llaves_oficina?"checked":""}> Llaves en la oficina</label>
         ${area("sNotas","Notas",r.asig_notas)}
-        <label class="chk hl"><input type="checkbox" id="sIni" ${r.trabajo_iniciado?"checked":""}> Trabajo iniciado (sube a ${CFG.pctIniciado}%)</label>
+        <label class="chk hl"><input type="checkbox" id="sIni" ${r.trabajo_iniciado?"checked":""}> Trabajo iniciado${delInq?" (obligatorio)":""} (sube a ${CFG.pctIniciado}%)</label>
         <div id="sIniW" ${r.trabajo_iniciado?"":"hidden"} class="grid">${fec("sIniF","Fecha de inicio",r.fecha_inicio||HOY,`max="${HOY}"`)}</div>
         ${guardar(r.etapa>=5?"Guardar cambios":"Guardar asignación")}`;
     }

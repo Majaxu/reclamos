@@ -1012,6 +1012,11 @@ function guardarAprobacion(id, datos) {
 /* API · etapa 5 · Asignado (y trabajo iniciado)                       */
 /* ================================================================== */
 
+/** ¿Es un reclamo sin presupuesto porque lo arregla el inquilino con su proveedor? */
+function arregloDelInquilino_(r) {
+  return !!r.sin_presupuesto && String(r.sin_presupuesto_motivo).indexOf(MOTIVOS_SIN_PRESUPUESTO[0]) === 0;
+}
+
 function guardarAsignacion(id, datos) {
   const email = emailActual_();
   datos = datos || {};
@@ -1021,13 +1026,21 @@ function guardarAsignacion(id, datos) {
     if (r.estado === 'en_pausa') throw new Error('El reclamo está en pausa: primero hay que resolver la aprobación.');
     if (r.etapa < 4) throw new Error('Primero hay que registrar la aprobación.');
 
+    // ARREGLO DEL INQUILINO CON SU PROVEEDOR (regla de negocio, corrección del 11/11/2026): la
+    // responsabilidad recae sobre el inquilino, así que en esta etapa nada es obligatorio salvo
+    // el tilde "trabajo iniciado". Sin proveedor cargado queda "Proveedor del inquilino".
+    const delInquilino = arregloDelInquilino_(r);
     const d = {};
     d.proveedor_id = String(datos.proveedor_id || '');
     d.proveedor_texto = d.proveedor_id ? '' : texto_(datos.proveedor_texto, 200);
     if (d.proveedor_id && !proveedor_(d.proveedor_id)) throw new Error('Elegí el proveedor.');
-    if (!d.proveedor_id && !d.proveedor_texto) throw new Error('Elegí el proveedor, o escribí el nombre si es el proveedor del inquilino.');
-    d.fecha_asignacion = fecha_(datos.fecha_asignacion, 'la fecha de asignación', true);
-    d.fecha_programada = fecha_(datos.fecha_programada, 'la fecha programada de inicio', true);
+    if (!d.proveedor_id && !d.proveedor_texto) {
+      if (!delInquilino) throw new Error('Elegí el proveedor, o escribí el nombre si es el proveedor del inquilino.');
+      d.proveedor_texto = 'Proveedor del inquilino';
+    }
+    if (delInquilino && !datos.trabajo_iniciado) throw new Error('Tildá "Trabajo iniciado": en un arreglo del inquilino con su proveedor es lo único obligatorio de esta etapa.');
+    d.fecha_asignacion = fecha_(datos.fecha_asignacion, 'la fecha de asignación', !delInquilino) || r.fecha_asignacion || hoy_();
+    d.fecha_programada = fecha_(datos.fecha_programada, 'la fecha programada de inicio', !delInquilino);
     d.acceso = texto_(datos.acceso, 1000);
     d.llaves_oficina = !!datos.llaves_oficina;
     d.asig_notas = texto_(datos.asig_notas, TEXTO_MAX);
@@ -1048,15 +1061,15 @@ function guardarAsignacion(id, datos) {
 
     const nombre = d.proveedor_id ? nombreProveedor_(d.proveedor_id) : d.proveedor_texto;
     let accion, detalle;
-    if (!yaAsignado) { accion = 'asignado'; detalle = nombre + ' · inicio programado ' + fechaAr_(d.fecha_programada); }
+    if (!yaAsignado) { accion = 'asignado'; detalle = nombre + (d.fecha_programada ? ' · inicio programado ' + fechaAr_(d.fecha_programada) : ''); }
     else if (cambioProv) { accion = 'cambió de proveedor'; detalle = proveedorDe_(r) + ' → ' + nombre; }
     else if (d.trabajo_iniciado && !r.trabajo_iniciado) { accion = 'trabajo iniciado'; detalle = fechaAr_(d.fecha_inicio); }
-    else if (reprogramo) { accion = 'reprogramó el inicio'; detalle = fechaAr_(r.fecha_programada) + ' → ' + fechaAr_(d.fecha_programada); }
+    else if (reprogramo) { accion = 'reprogramó el inicio'; detalle = fechaAr_(r.fecha_programada) + ' → ' + (fechaAr_(d.fecha_programada) || 'sin fecha'); }
     else { accion = 'editó la asignación'; detalle = ''; }
     aplicar_(r, d, email, accion, detalle, cambioProv ? { motivo: motivo, proveedor_id: r.proveedor_id } : null);
     if (!yaAsignado && d.trabajo_iniciado) log_(email, r.id_reclamo, 'trabajo iniciado', fechaAr_(d.fecha_inicio));
     // DEMORA: el trabajo empezó después de la fecha programada. Queda asociada al proveedor.
-    if (d.trabajo_iniciado && !r.trabajo_iniciado && d.fecha_inicio > d.fecha_programada) {
+    if (d.trabajo_iniciado && !r.trabajo_iniciado && d.fecha_programada && d.fecha_inicio > d.fecha_programada) {
       log_(email, r.id_reclamo, 'demora', 'Inicio demorado: programado ' + fechaAr_(d.fecha_programada) + ', empezó ' + fechaAr_(d.fecha_inicio),
         { proveedor_id: d.proveedor_id });
     }
