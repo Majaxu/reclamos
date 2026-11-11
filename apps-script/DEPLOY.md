@@ -23,7 +23,7 @@ No hay IDs para pegar en el código: la planilla y la carpeta las crea el paso s
 
 1. En el desplegable de funciones elegí **`instalar`** y tocá **Ejecutar**. Autorizá los permisos con `mantenimiento@`.
 2. `instalar` crea la planilla **Pipeline Reclamos · Base** y la carpeta **Reclamos** en el Drive de `mantenimiento@`,
-   arma las ocho hojas, carga los rubros iniciales y la hoja `Config`, comparte la carpeta en solo lectura con Gerardo y
+   arma las ocho hojas, carga los rubros iniciales y la hoja `Config`, toma el padrón de la planilla de Biprop si la encuentra, comparte la carpeta en solo lectura con Gerardo y
    Máximo, y programa dos disparadores: `tic` (cada hora: mails y reintentos de Biprop) y `dailyBackup` (~03:00).
 3. En **Registro de ejecución** tienen que aparecer renglones `OK`. Los `OJO` sobre Biprop se resuelven en el Paso 5.
 

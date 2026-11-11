@@ -53,6 +53,7 @@ const FAVICON_URL = PAGES_URL + 'favicon-32.png';
 
 const NOMBRE_PLANILLA = 'Pipeline Reclamos · Base';
 const NOMBRE_CARPETA  = 'Reclamos';
+const NOMBRE_PLANILLA_BIPROP = 'Historial Multimedia · Base';
 const CARPETA_EXPORT  = '_Exportaciones';
 const BACKUP_FOLDER   = 'Pipeline Reclamos · Respaldos';
 const BACKUP_KEEP     = 30;
@@ -1843,6 +1844,15 @@ function instalar() {
   CONFIG_DEFECTO.forEach(c => {
     if (claves.indexOf(c[0]) === -1) agregar_('Config', { clave: c[0], valor: c[1], descripcion: c[2] });
   });
+
+  // Biprop corre en esta misma cuenta: si su planilla está en este Drive, se toma de ahí el padrón de propiedades.
+  if (!props.getProperty('BIPROP_SHEET_ID')) {
+    const halladas = vivos_(DriveApp.getFilesByName(NOMBRE_PLANILLA_BIPROP));
+    if (halladas.length === 1) {
+      props.setProperty('BIPROP_SHEET_ID', halladas[0].getId());
+      r.push('Planilla de Biprop encontrada: se usa como padrón de propiedades.');
+    }
+  }
 
   ScriptApp.getProjectTriggers().forEach(t => {
     if (['tic', 'dailyBackup'].indexOf(t.getHandlerFunction()) !== -1) ScriptApp.deleteTrigger(t);
