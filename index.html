@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline Reclamos</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon-180.png">
+<meta name="apple-mobile-web-app-title" content="Reclamos">
+<meta name="robots" content="noindex">
+
+<!--
+  Página de acceso a Pipeline Reclamos (GitHub Pages).
+  Redirige automáticamente a la aplicación (Google Apps Script).
+
+  1) Reemplazá el valor de APP_URL de abajo por la URL de la app (la que termina en /exec).
+  2) Si algún día cambia la URL de la app, se cambia solo acá.
+
+  Para dejar el ícono en el celular, abrí esta misma página con ?instalar al final:
+  no redirige, y da tiempo a "Agregar a pantalla de inicio".
+-->
+
+<style>
+  :root{ --navy:#123a72; --navy2:#0e2b57; --green:#1f9d61; }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:linear-gradient(135deg,var(--navy),var(--navy2)); color:#fff;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:24px;
+  }
+  .box{max-width:440px}
+  .logo{width:min(320px,78vw); height:auto; margin:0 auto 26px; display:block}
+  .spinner{
+    width:40px; height:40px; margin:0 auto 20px; border-radius:50%;
+    border:4px solid rgba(255,255,255,.22); border-top-color:var(--green);
+    animation:spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){ .spinner{animation:none} }
+  .title{font-size:15px; font-weight:800; letter-spacing:.3px; opacity:.95; margin-bottom:20px}
+  .hint{font-size:14px; opacity:.88; line-height:1.5}
+  a.manual{display:inline-block; margin-top:4px; color:#fff; font-weight:750; text-decoration:underline; text-underline-offset:3px}
+  .steps{
+    text-align:left; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.2);
+    border-radius:16px; padding:16px 18px; font-size:14px; line-height:1.55; margin:0 0 18px;
+  }
+  .steps b{display:block; margin-bottom:4px}
+  .steps p{margin:0 0 12px}
+  .steps p:last-child{margin-bottom:0}
+  .go{
+    display:inline-block; background:#fff; color:var(--navy); font-weight:800; text-decoration:none;
+    padding:13px 22px; border-radius:12px;
+  }
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+  <div class="box">
+    <img class="logo" src="logo-jb-blanco.png" alt="Juárez Beltrán · Asesores Inmobiliarios">
+    <div class="title">Pipeline Reclamos</div>
+
+    <!-- Modo normal: redirige -->
+    <div id="redir">
+      <div class="spinner" role="status" aria-label="Cargando"></div>
+      <p class="hint">
+        Redirigiendo a la aplicación…<br>
+        Si no ocurre en unos segundos,
+        <a class="manual" id="manual" href="#">entrá desde acá</a>.
+      </p>
+    </div>
+
+    <!-- Modo ?instalar: no redirige, para poder dejar el ícono en el celular -->
+    <div id="instalar" hidden>
+      <div class="steps">
+        <p><b>iPhone (Safari)</b>Tocá el botón Compartir y elegí "Agregar a inicio".</p>
+        <p><b>Android (Chrome)</b>Tocá el menú de los tres puntos y elegí "Agregar a la pantalla principal".</p>
+        <p>Después, cada vez que toques el ícono se abre la app.</p>
+      </div>
+      <a class="go" id="entrar" href="#">Entrar a la app ahora</a>
+    </div>
+
+    <!-- Todavía no se pegó la URL de la app -->
+    <p class="hint" id="falta" hidden>
+      Falta configurar esta página: hay que pegar la URL de la app en el archivo <b>index.html</b>
+      (ver el Paso 4 de apps-script/DEPLOY.md).
+    </p>
+  </div>
+
+  <script>
+    var APP_URL = "PEGAR_AQUI_LA_URL_DE_LA_APP";
+
+    (function () {
+      var lista = /^https:\/\/script\.google\.com\//.test(APP_URL);
+      var modoInstalar = /[?&]instalar\b/.test(location.search);
+      var mostrar = function (id) {
+        ["redir", "instalar", "falta"].forEach(function (x) { document.getElementById(x).hidden = (x !== id); });
+      };
+      if (!lista) { mostrar("falta"); return; }
+      document.getElementById("manual").href = APP_URL;
+      document.getElementById("entrar").href = APP_URL;
+      if (modoInstalar) {
+        // Se saca "?instalar" de la barra de direcciones: así el ícono que se guarda en el
+        // celular apunta a la dirección normal, que sí redirige a la app.
+        try { history.replaceState(null, "", location.pathname); } catch (e) {}
+        mostrar("instalar");
+        return;
+      }
+      // replace() evita que "Atrás" vuelva a esta pantalla en un loop.
+      window.location.replace(APP_URL);
+    })();
+  </script>
+</body>
+</html>

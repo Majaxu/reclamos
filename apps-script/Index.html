@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline Reclamos</title>
+<style>
+  :root{
+    --ink:#1B2330; --muted:#4A5361; --soft:#5B6472; --line:#DDE1E7; --line2:#ECEFF3; --bg:#F6F7F9;
+    --blue:#1F5FBF; --blue2:#174A96; --bluebg:#E9F0FB; --red:#8A1C1C; --navy:#10295a;
+    --warnbg:#FDE9C8; --warnink:#6B4000; --graybg:#E8EBEF; --grayink:#3D4654; --okbg:#DDF3E6; --okink:#17633F;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{cursor:pointer}
+  a{color:var(--blue)} a:hover{color:var(--blue2)}
+  [hidden]{display:none !important}
+  h1{margin:0;font-size:24px;font-weight:700} h2{margin:0;font-size:18px;font-weight:700}
+
+  header.top{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+  .topin{max-width:1280px;margin:0 auto;padding:10px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 28px}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:17px;cursor:pointer;border:0;background:none;padding:0}
+  .brand img{height:26px;width:auto;display:block}
+  nav.sec{display:flex;gap:4px;flex:1 1 auto;overflow-x:auto;scrollbar-width:none}
+  nav.sec::-webkit-scrollbar{display:none}
+  nav.sec button{padding:11px 14px;border:0;border-radius:8px;background:none;color:var(--grayink);font-weight:500;white-space:nowrap}
+  nav.sec button.on{background:var(--bluebg);color:var(--blue2);font-weight:600}
+  .sesion{font-size:13px;color:var(--muted)}
+  main{max-width:1280px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px}
+  .pad{padding:18px}
+  .m{color:var(--muted);font-size:13px}
+  .l{font-size:12px;font-weight:600;color:var(--muted)}
+  .f{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .i{min-height:44px;padding:0 12px;border:1px solid #C5CBD4;border-radius:8px;background:#fff;width:100%}
+  textarea.i{padding:10px 12px;min-height:80px;resize:vertical}
+  .i:focus{outline:2px solid #9DBEEC;outline-offset:0;border-color:var(--blue)}
+  .i:disabled{background:#F1F3F6;color:var(--soft)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .chk{display:flex;align-items:center;gap:10px;min-height:44px}
+  .chk input{width:20px;height:20px;flex:0 0 auto}
+  .chk.hl{padding:0 14px;border-radius:8px;background:var(--bluebg);font-weight:600}
+  .b1{min-height:44px;padding:0 20px;border:0;border-radius:8px;background:var(--blue);color:#fff;font-weight:600;font-size:15px}
+  .b1:hover{background:var(--blue2)}
+  .b2{min-height:44px;padding:0 16px;border:1px solid #C5CBD4;border-radius:8px;background:#fff;font-weight:600}
+  .b2.red{color:var(--red);border-color:var(--red)}
+  .b3{border:0;background:none;color:var(--blue);font-weight:600;padding:6px 0;font-size:13px}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .btns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .rowsb{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+
+  .p{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;margin:2px 4px 2px 0}
+  .pa{background:var(--red);color:#fff}.pw{background:var(--warnbg);color:var(--warnink)}.pi{background:var(--graybg);color:var(--grayink)}
+  .pok{background:var(--okbg);color:var(--okink)}
+  .u{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;font-weight:700;font-size:13px}
+  .u5{background:#8A1C1C;color:#fff}.u4{background:#C2410C;color:#fff}.u3{background:#FDE9C8;color:#6B4000}.u2{background:#DCE9FB;color:#1B4B91}.u1{background:#E8EBEF;color:#3D4654}
+  .bar{height:8px;border-radius:4px;background:#E3E7ED;overflow:hidden;width:150px;max-width:100%}
+  .bar span{display:block;height:100%;background:var(--blue);border-radius:4px}
+
+  /* Tablero */
+  .cnt{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .cnt button{text-align:left;padding:14px 18px;background:#fff;border:1px solid var(--line);border-radius:10px}
+  .cnt button.on{border:2px solid var(--blue);padding:13px 17px}
+  .cnt button.al{border-color:var(--red)} .cnt button.al b{color:var(--red)}
+  .cnt span{display:block;font-size:13px;color:var(--muted)} .cnt b{display:block;font-size:30px;font-weight:700;margin-top:4px}
+  .filtros{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+  .filtros .f{flex:0 1 170px} .filtros .f.q{flex:1 1 240px}
+  .tw{overflow-x:auto}
+  .row{display:grid;column-gap:14px;align-items:center;padding:0 14px}
+  .t-tab .row{grid-template-columns:80px 1.6fr 1.2fr 56px 180px 1.1fr 70px 70px 1.5fr;min-width:1080px}
+  .t-his .row{grid-template-columns:80px 1.6fr 1.2fr 56px 110px 1.1fr 100px 110px 70px;min-width:1000px}
+  .t-prv .row{grid-template-columns:1.6fr 1.6fr 1fr 80px 80px 80px 80px 80px;min-width:900px}
+  .hd{border-bottom:1px solid var(--line)}
+  .bd{padding-top:11px;padding-bottom:11px;border-bottom:1px solid var(--line2);cursor:pointer}
+  .bd:hover{background:#FAFBFC}
+  .bd:last-child{border-bottom:0}
+  .sb{display:flex;align-items:center;gap:6px;width:100%;min-height:44px;padding:0;border:0;background:none;text-align:left;font-weight:600;font-size:12px;color:var(--muted);white-space:nowrap}
+  .sb:hover{color:var(--blue2)} .ar{font-size:10px;color:var(--blue2);min-width:10px}
+  .th{min-height:44px;display:flex;align-items:center;font-weight:600;font-size:12px;color:var(--muted)}
+  .vacio{padding:36px 18px;text-align:center;color:var(--muted)}
+
+  /* Ficha */
+  .st{flex:1 1 100px;display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600}
+  .st span{height:8px;border-radius:4px}
+  .st.ok span{background:var(--blue)} .st.ok{color:var(--blue2)}
+  .st.now span{background:#9DBEEC} .st.no span{background:#E3E7ED} .st.no{color:var(--soft)}
+  .cols{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+  .colmain{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:10px}
+  .colside{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:14px}
+  .done{padding:12px 18px;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline}
+  .done .x{margin-left:auto}
+  .etapa{padding:20px;display:flex;flex-direction:column;gap:16px}
+  .etapa.act{border:2px solid var(--blue)}
+  .h{margin:0 0 10px;font-size:14px;font-weight:700}
+  .li{padding:8px 0;border-top:1px solid var(--line2);font-size:13px;overflow-wrap:anywhere}
+  .li:first-of-type{border-top:0}
+  .nota{background:#F6F7F9;border-radius:8px;padding:10px 12px;font-size:13px}
+  .aviso{border-radius:8px;padding:10px 14px;font-size:13px;background:var(--warnbg);color:var(--warnink)}
+  .aviso.rojo{background:#FBE9E9;color:var(--red)}
+  .aviso.azul{background:var(--bluebg);color:var(--blue2)}
+  .sub{border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .adj{display:flex;flex-wrap:wrap;gap:8px}
+  .adj a,.adj span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:12px;text-decoration:none;color:var(--ink);background:#fff;max-width:100%;overflow-wrap:anywhere}
+  .res{border:1px solid var(--line);border-radius:8px;max-height:240px;overflow:auto;background:#fff}
+  .res button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line2);background:none;padding:10px 12px}
+  .res button:hover{background:var(--bluebg)}
+  .pre{white-space:pre-wrap;overflow-wrap:anywhere}
+
+  /* Supervisión */
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .kpi div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 18px}
+  .kpi span{display:block;font-size:13px;color:var(--muted)} .kpi b{display:block;font-size:26px;margin-top:4px}
+  table.t{border-collapse:collapse;width:100%;font-size:13px}
+  table.t th{text-align:left;font-size:12px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.t td{padding:8px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  table.t tr:last-child td{border-bottom:0}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .hb{height:8px;background:var(--blue);border-radius:4px;min-width:2px}
+  .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}
+
+  /* Capas */
+  #busy{position:fixed;inset:0;background:rgba(255,255,255,.75);display:none;align-items:center;justify-content:center;z-index:90;text-align:center;padding:24px}
+  #busy.show{display:flex}
+  #busy .box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 26px;box-shadow:0 10px 30px rgba(16,41,90,.12);max-width:420px}
+  .spin{width:34px;height:34px;margin:0 auto 12px;border-radius:50%;border:4px solid #E3E7ED;border-top-color:var(--blue);animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spin{animation:none}}
+  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:10px;z-index:95;max-width:calc(100vw - 32px);display:none;font-size:14px}
+  #toast.show{display:block} #toast.err{background:var(--red)}
+  .modal{position:fixed;inset:0;background:rgba(20,32,51,.45);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:24px 14px;overflow:auto}
+  .modal .dlg{background:#fff;border-radius:12px;width:100%;max-width:620px;padding:22px;display:flex;flex-direction:column;gap:16px}
+
+  @media (max-width:640px){
+    main{padding:14px;gap:14px} .topin{padding:8px 14px} h1{font-size:20px}
+    .etapa{padding:14px} .pad{padding:14px} .sesion{display:none}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="topin">
+    <button type="button" class="brand" id="brand"><img id="logoJB" alt="" src="https://majaxu.github.io/reclamos/logo-jb-azul.png" onerror="this.remove()"><span>Pipeline Reclamos</span></button>
+    <nav class="sec" aria-label="Secciones" id="nav">
+      <button type="button" data-v="tablero">Tablero</button>
+      <button type="button" data-v="historial">Historial</button>
+      <button type="button" data-v="proveedores">Proveedores</button>
+      <button type="button" data-v="supervision">Supervisión</button>
+    </nav>
+    <div class="sesion" id="sesion"></div>
+  </div>
+</header>
+<main id="main"><div class="card vacio">Cargando…</div></main>
+<div id="capas"></div>
+<div id="busy"><div class="box"><div class="spin"></div><div id="busyMsg" style="font-weight:700"></div><div id="busySub" class="m" style="margin-top:4px"></div></div></div>
+<div id="toast" role="status"></div>
+
+<script>
+(function(){
+  "use strict";
+  /* ---------------------------------------------------------------- */
+  /* Utilidades                                                       */
+  /* ---------------------------------------------------------------- */
+  const $ = (s, el) => (el||document).querySelector(s);
+  const $$ = (s, el) => [...(el||document).querySelectorAll(s)];
+  const esc = s => String(s===null||s===undefined?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const pad4 = n => ("0000"+Number(n)).slice(-4);
+  const fechaAr = ymd => { const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(ymd||"")); return m ? m[3]+"/"+m[2]+"/"+m[1] : ""; };
+  const fechaCorta = ymd => fechaAr(ymd).slice(0,5);
+  const momento = t => { const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(t||"")); return m ? m[3]+"/"+m[2]+" "+m[4]+":"+m[5] : ""; };
+  const pesos = n => (n===""||n===null||n===undefined) ? "" : "$ "+String(Math.round(Number(n))).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  const esImagen = mime => String(mime||"").indexOf("image/")===0;
+  const esVideo = mime => String(mime||"").indexOf("video/")===0;
+  const plural = (n, uno, varios) => n+" "+(n===1?uno:varios);
+  const norm = s => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  // Importe escrito a la argentina ("185.000" o "185000,50") a número. Vacío queda vacío.
+  const aNumero = v => { const s=String(v||"").trim(); if(!s) return ""; const n=Number(s.replace(/\./g,"").replace(",",".")); return isNaN(n) ? NaN : n; };
+
+  let ME=null, CFG=null, RUBROS=[], PROVS=[], PROPS=[], RECLAMOS=[], HOY="";
+  let VISTA="tablero";
+
+  function busy(on, msg, sub){ $("#busy").classList.toggle("show", !!on); $("#busyMsg").textContent=msg||""; $("#busySub").textContent=sub||""; }
+  let toastT=null;
+  function toast(msg, err){
+    const t=$("#toast"); t.textContent=msg; t.classList.toggle("err", !!err); t.classList.add("show");
+    clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"), err?7000:3500);
+  }
+  const mensaje = err => String((err && err.message) || err || "Error").replace(/^(Exception|Error):\s*/,"");
+  const fallo = err => { busy(false); toast(mensaje(err), true); };
+
+  /* Puente con el backend de Apps Script */
+  const server = (fn, ...args) => new Promise((resolve, reject) => {
+    if(!(window.google && google.script && google.script.run)) return reject(new Error("Esta app debe abrirse desde su URL de Google (no como archivo local)."));
+    google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn](...args);
+  });
+  const conTope = (promesa, ms) => Promise.race([promesa, new Promise((_, rej)=>setTimeout(()=>rej(new Error("El servidor tardó demasiado en responder.")), ms))]);
+  const fileToBase64 = file => new Promise((res, rej) => {
+    const r=new FileReader();
+    r.onload=()=>res(String(r.result).split(",")[1]||"");
+    r.onerror=()=>rej(new Error("No se pudo leer el archivo."));
+    r.readAsDataURL(file);
+  });
+
+  /** Ventana modal. Devuelve el elemento; cerrar() la saca. */
+  function modal(html){
+    const el=document.createElement("div"); el.className="modal";
+    el.innerHTML='<div class="dlg" role="dialog" aria-modal="true">'+html+'</div>';
+    el.cerrar=()=>el.remove();
+    el.addEventListener("mousedown", e=>{ if(e.target===el) el.cerrar(); });
+    $("#capas").appendChild(el);
+    const primero=$("input,select,textarea,button", el); if(primero) primero.focus();
+    return el;
+  }
+  /** Pide un texto obligatorio (motivos). Resuelve con el texto, o null si se cancela. */
+  function pedirTexto(titulo, etiqueta, boton, opciones){
+    return new Promise(resolve=>{
+      const el=modal(`<h2>${esc(titulo)}</h2>
+        ${opciones?`<div class="f"><label class="l" for="ptSel">Motivo</label><select id="ptSel" class="i">${opciones.map(o=>`<option>${esc(o)}</option>`).join("")}</select></div>`:""}
+        <div class="f"><label class="l" for="ptTxt">${esc(etiqueta)}</label><textarea id="ptTxt" class="i" rows="3"></textarea></div>
+        <div class="btns"><button type="button" class="b1" data-a="ok">${esc(boton)}</button><button type="button" class="b2" data-a="no">Cancelar</button></div>`);
+      el.addEventListener("click", e=>{
+        const a=e.target.dataset.a; if(!a) return;
+        if(a==="no"){ el.cerrar(); resolve(null); return; }
+        const txt=$("#ptTxt", el).value.trim(), sel=opciones?$("#ptSel", el).value:"";
+        if(!opciones && !txt){ toast("Escribí el motivo.", true); return; }
+        el.cerrar(); resolve(opciones?{ motivo:sel, detalle:txt }:txt);
+      });
+    });
+  }
+
+  const opts = (lista, actual, vacio) => (vacio!==undefined?`<option value="">${esc(vacio)}</option>`:"")+
+    lista.map(o=>{ const v=typeof o==="object"?o.v:o, t=typeof o==="object"?o.t:o; return `<option value="${esc(v)}"${String(v)===String(actual)?" selected":""}>${esc(t)}</option>`; }).join("");
+  const campo = (id, etiqueta, html) => `<div class="f"><label class="l" for="${id}">${etiqueta}</label>${html}</div>`;
+  const inp = (id, etiqueta, valor, extra) => campo(id, etiqueta, `<input id="${id}" class="i" type="text" value="${esc(valor)}" ${extra||""}>`);
+  const fec = (id, etiqueta, valor, extra) => campo(id, etiqueta, `<input id="${id}" class="i" type="date" value="${esc(valor)}" ${extra||""}>`);
+  const area = (id, etiqueta, valor, extra) => campo(id, etiqueta, `<textarea id="${id}" class="i" rows="3" ${extra||""}>${esc(valor)}</textarea>`);
+  const sel = (id, etiqueta, opciones, extra) => campo(id, etiqueta, `<select id="${id}" class="i" ${extra||""}>${opciones}</select>`);
+  const val = id => { const e=document.getElementById(id); return e ? e.value.trim() : ""; };
+  const tildado = id => { const e=document.getElementById(id); return !!(e && e.checked); };
+
+  const nombreRubro = id => { const r=RUBROS.filter(x=>x.id_rubro===id)[0]; return r?r.nombre:""; };
+  const proveedor = id => PROVS.filter(p=>p.id_proveedor===id)[0] || null;
+  /** Proveedores activos para un desplegable: primero los del rubro, ordenados por calificación. */
+  function provOpciones(rubroId, actual, vacio){
+    const act=PROVS.filter(p=>p.estado==="activo" || p.id_proveedor===actual);
+    const cal=p=>p.calificacion===""?-1:Number(p.calificacion);
+    const orden=(a,b)=>cal(b)-cal(a) || a.nombre.localeCompare(b.nombre);
+    const del=act.filter(p=>rubroId && p.rubros.indexOf(rubroId)!==-1).sort(orden);
+    const resto=act.filter(p=>del.indexOf(p)===-1).sort(orden);
+    const o=p=>`<option value="${esc(p.id_proveedor)}"${p.id_proveedor===actual?" selected":""}>${esc(p.nombre)}${p.calificacion!==""?" · "+String(p.calificacion).replace(".",",")+"★":""}</option>`;
+    return `<option value="">${esc(vacio||"Elegir…")}</option>`+
+      (del.length?`<optgroup label="Del rubro">${del.map(o).join("")}</optgroup>`:"")+
+      (resto.length?`<optgroup label="${del.length?"Otros rubros":"Proveedores"}">${resto.map(o).join("")}</optgroup>`:"");
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Arranque y navegación                                            */
+  /* ---------------------------------------------------------------- */
+  function aplicarTablero(res){
+    RECLAMOS=res.reclamos||[]; PROVS=res.proveedores||PROVS; RUBROS=res.rubros||RUBROS; PROPS=res.propiedades||PROPS; HOY=res.hoy||HOY;
+  }
+  function refrescar(){ return server("getTablero").then(aplicarTablero); }
+
+  function ir(vista, arg){
+    VISTA=vista;
+    $$("#nav button").forEach(b=>b.classList.toggle("on", b.dataset.v===vista || (b.dataset.v==="tablero" && (vista==="ficha"||vista==="nuevo"))));
+    window.scrollTo(0,0);
+    $("#main").onclick=null; $("#main").onchange=null;
+    if(vista==="tablero") verTablero();
+    else if(vista==="nuevo") verNuevo(arg);
+    else if(vista==="ficha") abrirFicha(arg);
+    else if(vista==="historial") verHistorial();
+    else if(vista==="proveedores") verProveedores();
+    else if(vista==="supervision") verSupervision();
+  }
+  $("#nav").addEventListener("click", e=>{ const v=e.target.dataset.v; if(v) ir(v); });
+  $("#brand").addEventListener("click", ()=>ir("tablero"));
+
+  function arrancar(){
+    server("getInicio").then(res=>{
+      ME={ email:res.email, nombre:res.nombre, rol:res.rol, usuarios:res.usuarios }; CFG=res.config;
+      aplicarTablero(res);
+      $("#sesion").textContent="Sesión: "+ME.nombre;
+      // Enlaces de los mails: ?r=R-0012 abre la ficha, ?v=supervision abre esa pantalla.
+      const seguir=p=>{ p=p||{}; if(p.r) ir("ficha", p.r); else if(p.v && ["historial","proveedores","supervision"].indexOf(p.v)!==-1) ir(p.v); else ir("tablero"); };
+      try{ google.script.url.getLocation(loc=>seguir(loc && loc.parameter)); }catch(e){ seguir(null); }
+    }).catch(err=>{ $("#main").innerHTML=`<div class="card vacio"><b>No se pudo abrir la app.</b><br>${esc(mensaje(err))}</div>`; });
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Tablero                                                          */
+  /* ---------------------------------------------------------------- */
+  const TAB={ q:"", etapa:"", urgencia:"", rubro:"", proveedor:"", contador:"", key:null, dir:-1, n:0 };
+  const COLS=[
+    { key:"n", label:"N°", num:false, v:r=>r.id_reclamo },
+    { key:"id", label:"Propiedad", num:false, v:r=>r.id_propiedad },
+    { key:"rubro", label:"Rubro", num:false, v:r=>norm(r.rubro) },
+    { key:"u", label:"Urg.", num:true, v:r=>Number(r.urgencia)||0 },
+    { key:"pct", label:"Etapa", num:true, v:r=>r.pct },
+    { key:"prov", label:"Proveedor", num:false, v:r=>norm(r.proveedor) },
+    { key:"dias", label:"Días abierto", num:true, v:r=>r.dias_abierto },
+    { key:"mov", label:"Sin mov.", num:true, v:r=>r.dias_sin_mov },
+    { key:"av", label:"Avisos", num:true, v:r=>r.alertas.length*100+r.avisos.length }
+  ];
+  const urg = u => u===""||!u ? '<span class="m" aria-label="Sin urgencia asignada">—</span>' : `<span class="u u${u}" aria-label="Urgencia ${u}">${u}</span>`;
+  const marcas = r => (r.alertas.map(a=>`<span class="p pa">${esc(a)}</span>`).concat(r.avisos.map(a=>`<span class="p ${/^(Sin fotos|En pausa)/.test(a)?"pw":"pi"}">${esc(a)}</span>`)).join("")) || '<span class="m">Sin avisos</span>';
+
+  function filtrados(){
+    const q=norm(TAB.q);
+    return RECLAMOS.filter(r=>{
+      if(TAB.contador==="alerta" && !r.alertas.length) return false;
+      if(TAB.contador==="pausa" && r.estado!=="en_pausa") return false;
+      if(TAB.contador==="sincerrar" && !(r.estado==="abierto" && r.etapa===6)) return false;
+      if(TAB.etapa && String(r.etapa)!==TAB.etapa) return false;
+      if(TAB.urgencia && String(r.urgencia)!==TAB.urgencia) return false;
+      if(TAB.rubro && r.rubro_id!==TAB.rubro) return false;
+      if(TAB.proveedor && r.proveedor_id!==TAB.proveedor) return false;
+      if(q && norm(r.id_reclamo+" "+pad4(r.id_propiedad)+" "+r.direccion).indexOf(q)===-1) return false;
+      return true;
+    });
+  }
+  function ordenados(lista){
+    // El orden por defecto ya viene del servidor: con alerta primero, después por urgencia.
+    if(!TAB.key) return lista;
+    const c=COLS.filter(x=>x.key===TAB.key)[0];
+    return lista.slice().sort((a,b)=>{ const x=c.v(a), y=c.v(b); return x<y ? -TAB.dir : x>y ? TAB.dir : 0; });
+  }
+
+  function verTablero(){
+    const ab=RECLAMOS.length, al=RECLAMOS.filter(r=>r.alertas.length).length,
+      pa=RECLAMOS.filter(r=>r.estado==="en_pausa").length, sc=RECLAMOS.filter(r=>r.estado==="abierto"&&r.etapa===6).length;
+    const provUsados=PROVS.filter(p=>RECLAMOS.some(r=>r.proveedor_id===p.id_proveedor));
+    $("#main").innerHTML=`
+      <div class="rowsb"><h1>Reclamos abiertos</h1><button type="button" class="b1" id="bNuevo">Nuevo reclamo</button></div>
+      <div class="cnt" id="cnt">
+        <button type="button" data-c=""><span>Abiertos</span><b>${ab}</b></button>
+        <button type="button" data-c="alerta" class="${al?"al":""}"><span>Con alerta</span><b>${al}</b></button>
+        <button type="button" data-c="pausa"><span>En pausa</span><b>${pa}</b></button>
+        <button type="button" data-c="sincerrar"><span>Terminados sin cerrar</span><b>${sc}</b></button>
+      </div>
+      <div class="filtros">
+        <div class="f q"><label class="l" for="fq">Buscar</label><input id="fq" class="i" type="search" placeholder="ID de propiedad, dirección o N° de reclamo" value="${esc(TAB.q)}"></div>
+        ${sel("fe","Etapa",opts(CFG.etapas.filter(e=>e.n<7).map(e=>({v:e.n,t:e.nombre})),TAB.etapa,"Todas"))}
+        ${sel("fu","Urgencia",opts([5,4,3,2,1],TAB.urgencia,"Todas"))}
+        ${sel("fr","Rubro",opts(RUBROS.map(r=>({v:r.id_rubro,t:r.nombre})),TAB.rubro,"Todos"))}
+        ${sel("fp","Proveedor",opts(provUsados.map(p=>({v:p.id_proveedor,t:p.nombre})),TAB.proveedor,"Todos"))}
+      </div>
+      <div class="card tw t-tab"><div role="table" aria-label="Reclamos abiertos" id="tabla"></div></div>`;
+    $("#bNuevo").onclick=()=>ir("nuevo");
+    $("#cnt").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; TAB.contador=TAB.contador===b.dataset.c?"":b.dataset.c; pintarTablero(); };
+    $("#fq").oninput=e=>{ TAB.q=e.target.value; pintarTablero(); };
+    [["fe","etapa"],["fu","urgencia"],["fr","rubro"],["fp","proveedor"]].forEach(([id,k])=>{ $("#"+id).onchange=e=>{ TAB[k]=e.target.value; pintarTablero(); }; });
+    $("#tabla").onclick=e=>{
+      const s=e.target.closest(".sb");
+      if(s){
+        // Primer clic ordena, segundo invierte, tercero vuelve al orden por defecto.
+        const c=COLS.filter(x=>x.key===s.dataset.k)[0];
+        if(TAB.key===c.key && TAB.n>=2){ TAB.key=null; TAB.n=0; }
+        else if(TAB.key===c.key){ TAB.dir=-TAB.dir; TAB.n=2; }
+        else { TAB.key=c.key; TAB.dir=c.num?-1:1; TAB.n=1; }
+        pintarTablero(); return;
+      }
+      const f=e.target.closest(".bd"); if(f) ir("ficha", f.dataset.id);
+    };
+    pintarTablero();
+    refrescar().then(()=>{ if(VISTA==="tablero") { pintarContadores(); pintarTablero(); } }).catch(()=>{});
+  }
+  function pintarContadores(){
+    const n=[RECLAMOS.length, RECLAMOS.filter(r=>r.alertas.length).length, RECLAMOS.filter(r=>r.estado==="en_pausa").length, RECLAMOS.filter(r=>r.estado==="abierto"&&r.etapa===6).length];
+    $$("#cnt button").forEach((b,i)=>{ $("b", b).textContent=n[i]; if(i===1) b.classList.toggle("al", n[1]>0); });
+  }
+  function pintarTablero(){
+    if(!$("#tabla")) return;
+    $$("#cnt button").forEach(b=>b.classList.toggle("on", TAB.contador===b.dataset.c && b.dataset.c!==""));
+    const lista=ordenados(filtrados());
+    const cab=`<div role="row" class="row hd">${COLS.map(c=>{ const on=TAB.key===c.key;
+      return `<div role="columnheader" aria-sort="${on?(TAB.dir===1?"ascending":"descending"):"none"}"><button type="button" class="sb" data-k="${c.key}">${c.label}<span class="ar" aria-hidden="true">${on?(TAB.dir===1?"▲":"▼"):""}</span></button></div>`; }).join("")}</div>`;
+    const filas=lista.map(r=>`<div role="row" class="row bd" data-id="${esc(r.id_reclamo)}">
+        <div role="cell"><a href="#" onclick="return false" style="font-weight:600">${esc(r.id_reclamo)}</a></div>
+        <div role="cell"><div style="font-weight:600">${pad4(r.id_propiedad)}</div><div class="m">${esc(r.direccion)}</div></div>
+        <div role="cell" class="${r.rubro?"":"m"}">${esc(r.rubro||"Sin evaluar")}</div>
+        <div role="cell">${urg(r.urgencia)}</div>
+        <div role="cell"><div style="font-weight:600;margin-bottom:6px">${esc(r.etapa_nombre)} · ${r.pct}%</div><div class="bar"><span style="width:${r.pct}%"></span></div></div>
+        <div role="cell" class="${r.proveedor?"":"m"}">${esc(r.proveedor||"Sin asignar")}</div>
+        <div role="cell">${r.dias_abierto}</div>
+        <div role="cell">${r.dias_sin_mov}</div>
+        <div role="cell">${marcas(r)}</div>
+      </div>`).join("");
+    $("#tabla").innerHTML=cab+(filas || `<div class="vacio">${RECLAMOS.length?"Ningún reclamo coincide con los filtros.":"No hay reclamos abiertos."}</div>`);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Adjuntos                                                         */
+  /* ---------------------------------------------------------------- */
+  const ACEPTA="image/*,video/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.txt";
+  const tactil = window.matchMedia && window.matchMedia("(pointer:coarse)").matches;
+
+  /** Sube una lista de archivos de a uno, con avance. Devuelve cuántos subió y los que fallaron. */
+  async function subirLista(idReclamo, seccion, idPresupuesto, files){
+    const lista=[...files]; let ok=0; const fallas=[];
+    for(let i=0;i<lista.length;i++){
+      const f=lista[i];
+      busy(true, "Subiendo archivo "+(i+1)+" de "+lista.length, f.name);
+      if(f.size>CFG.maxMb*1024*1024){ fallas.push(f.name+": supera los "+CFG.maxMb+" MB"); continue; }
+      try{
+        const b64=await fileToBase64(f);
+        await conTope(server("subirArchivo", idReclamo, seccion, idPresupuesto||"", b64, f.name, f.type||""), 6*60*1000);
+        ok++;
+      }catch(err){ fallas.push(f.name+": "+mensaje(err)); }
+    }
+    return { ok:ok, fallas:fallas };
+  }
+  /** Después de subir adjuntos del ingreso o de la finalización: los manda a Biprop si está activo. */
+  async function aBiprop(idReclamo){
+    if(!CFG.biprop) return "";
+    busy(true, "Enviando a Biprop…");
+    try{ const r=await conTope(server("sincronizarBiprop", idReclamo), 5*60*1000); return r.aviso||""; }
+    catch(err){ return "No se pudo enviar a Biprop: "+mensaje(err)+" Queda pendiente."; }
+  }
+  const selectorArchivos = (id, etiqueta) => `<div class="f"><span class="l">${etiqueta}</span>
+      <div class="btns"><button type="button" class="b2" data-pick="${id}">Elegir archivos</button>${tactil?`<button type="button" class="b2" data-pick="${id}Cam">Sacar foto</button>`:""}</div>
+      <input type="file" id="${id}" accept="${ACEPTA}" multiple hidden><input type="file" id="${id}Cam" accept="image/*" capture="environment" hidden>
+      <div class="m">Fotos, videos, PDF, Word y otros formatos. Hasta ${CFG.maxMb} MB por archivo.</div></div>`;
+  const listaAdj = lista => lista.length ? `<div class="adj">${lista.map(a=>`<a href="${esc(a.url)}" target="_blank" rel="noopener" title="${esc(a.nombre_original)}">${esImagen(a.mime)?"Foto":esVideo(a.mime)?"Video":"Archivo"} · ${esc(a.nombre_original)}</a>`).join("")}</div>` : "";
+
+  /* ---------------------------------------------------------------- */
+  /* Buscador de propiedad                                            */
+  /* ---------------------------------------------------------------- */
+  /** Campo de propiedad: busca por ID o dirección en el padrón de Biprop. Si el ID no existe, pide la dirección para darla de alta. */
+  function propiedadHtml(idActual){
+    const p=PROPS.filter(x=>x.id===idActual)[0];
+    return `<div class="f"><label class="l" for="pq">Propiedad</label>
+        <input id="pq" class="i" type="text" autocomplete="off" placeholder="ID de 4 cifras o dirección" value="${p?esc(pad4(p.id)+" · "+p.direccion):""}">
+        <div class="res" id="pres" hidden></div>
+        <input type="hidden" id="pid" value="${idActual||""}">
+      </div>
+      <div id="pnueva" hidden><div class="aviso azul" style="margin-bottom:10px">Esa propiedad todavía no está en Biprop. Escribí la dirección y se da de alta con ese ID.</div>
+        ${inp("pdir","Dirección de la propiedad","")}</div>
+      <div id="pabiertos"></div>`;
+  }
+  function propiedadEnlazar(idReclamoPropio){
+    const q=$("#pq"), res=$("#pres"), pid=$("#pid");
+    const elegir=p=>{ pid.value=p.id; q.value=pad4(p.id)+" · "+p.direccion; res.hidden=true; $("#pnueva").hidden=true; mostrarAbiertos(); };
+    function mostrarAbiertos(){
+      // Al elegir la propiedad se muestran sus reclamos abiertos, para evitar duplicados.
+      const id=Number(pid.value), otros=RECLAMOS.filter(r=>r.id_propiedad===id && r.id_reclamo!==idReclamoPropio);
+      $("#pabiertos").innerHTML=otros.length?`<div class="aviso">Esta propiedad ya tiene ${plural(otros.length,"reclamo abierto","reclamos abiertos")}:
+        ${otros.map(r=>`<div style="margin-top:6px"><a href="#" data-ver="${esc(r.id_reclamo)}"><b>${esc(r.id_reclamo)}</b></a> · ${esc(r.etapa_nombre)} · ${esc(r.descripcion.slice(0,90))}</div>`).join("")}</div>`:"";
+    }
+    q.oninput=()=>{
+      const t=norm(q.value.trim()); pid.value=""; $("#pabiertos").innerHTML="";
+      if(!t){ res.hidden=true; $("#pnueva").hidden=true; return; }
+      const esNum=/^\d{1,4}$/.test(t);
+      const lista=PROPS.filter(p=>esNum ? pad4(p.id).indexOf(t)!==-1 || String(p.id)===String(Number(t)) : norm(p.direccion).indexOf(t)!==-1).slice(0,30);
+      res.innerHTML=lista.map(p=>`<button type="button" data-id="${p.id}"><b>${pad4(p.id)}</b> · ${esc(p.direccion)}</button>`).join("");
+      res.hidden=!lista.length;
+      const exacta=esNum && PROPS.filter(p=>p.id===Number(t))[0];
+      // ID numérico que no está en el padrón: propiedad nueva.
+      const nueva=esNum && !exacta && Number(t)>=1;
+      $("#pnueva").hidden=!nueva;
+      if(nueva || exacta){ pid.value=Number(t); mostrarAbiertos(); }
+    };
+    res.onclick=e=>{ const b=e.target.closest("button"); if(b) elegir(PROPS.filter(p=>p.id===Number(b.dataset.id))[0]); };
+    $("#pabiertos").onclick=e=>{ const v=e.target.dataset.ver; if(v){ e.preventDefault(); ir("ficha", v); } };
+    mostrarAbiertos();
+  }
+  const propiedadDatos = () => ({ id_propiedad: val("pid"), direccion_nueva: $("#pnueva").hidden ? "" : val("pdir") });
+
+  function ingresoHtml(r){
+    const quien=r?r.quien_reclama:"Inquilino";
+    return `${propiedadHtml(r?r.id_propiedad:null)}
+      <div class="grid">
+        ${fec("iFecha","Fecha del reclamo", r?r.fecha_reclamo:HOY, `max="${HOY}"`)}
+        ${sel("iCanal","Canal",opts(CFG.canales, r?r.canal:"WhatsApp"))}
+        ${sel("iQuien","Quién reclama",opts(CFG.quienReclama, quien))}
+      </div>
+      <div id="iDatosW" ${quien==="Inquilino"?"hidden":""}>${inp("iDatos","Datos de quien reclama (nombre, teléfono, lo que haga falta)", r?r.datos_reclamante:"")}</div>
+      ${area("iDesc","Descripción del problema", r?r.descripcion:"", 'rows="4"')}`;
+  }
+  function ingresoEnlazar(idPropio){
+    propiedadEnlazar(idPropio);
+    $("#iQuien").onchange=e=>{ $("#iDatosW").hidden=e.target.value==="Inquilino"; };
+  }
+  const ingresoDatos = () => Object.assign(propiedadDatos(), { fecha_reclamo:val("iFecha"), canal:val("iCanal"), quien_reclama:val("iQuien"), datos_reclamante:val("iDatos"), descripcion:val("iDesc") });
+
+  /* ---------------------------------------------------------------- */
+  /* Nuevo reclamo (etapa 1)                                          */
+  /* ---------------------------------------------------------------- */
+  let PEND=[];
+  function pintarPend(){
+    $("#pend").innerHTML=PEND.length?`<div class="adj">${PEND.map((f,i)=>`<span>${esc(f.name)} <button type="button" class="b3" data-q="${i}" aria-label="Quitar ${esc(f.name)}">Quitar</button></span>`).join("")}</div>`:"";
+  }
+  function verNuevo(derivadoDe){
+    PEND=[];
+    const base=derivadoDe && derivadoDe.reclamo;
+    $("#main").innerHTML=`
+      <a href="#" id="volver" style="font-weight:600;text-decoration:none">← Volver al tablero</a>
+      <div class="card etapa act">
+        <h2>Nuevo reclamo${base?" · derivado de "+esc(base.id_reclamo):""}</h2>
+        ${ingresoHtml(base?{ id_propiedad:base.id_propiedad, fecha_reclamo:HOY, canal:base.canal, quien_reclama:base.quien_reclama, datos_reclamante:base.datos_reclamante, descripcion:"" }:null)}
+        ${selectorArchivos("nFiles","Adjuntos (opcional)")}
+        <div id="pend"></div>
+        <div class="btns"><button type="button" class="b1" id="nGuardar">Guardar reclamo</button></div>
+      </div>`;
+    ingresoEnlazar("");
+    $("#volver").onclick=e=>{ e.preventDefault(); ir("tablero"); };
+    $("#main").onclick=e=>{
+      const pk=e.target.dataset.pick; if(pk){ $("#"+pk).click(); return; }
+      const q=e.target.dataset.q; if(q!==undefined){ PEND.splice(Number(q),1); pintarPend(); }
+    };
+    ["nFiles","nFilesCam"].forEach(id=>{ $("#"+id).onchange=e=>{ PEND=PEND.concat([...e.target.files]); e.target.value=""; pintarPend(); }; });
+    $("#nGuardar").onclick=async()=>{
+      const d=ingresoDatos();
+      if(!d.id_propiedad){ toast("Elegí la propiedad.", true); return; }
+      if(base) d.reclamo_origen=base.id_reclamo;
+      busy(true, "Guardando el reclamo…");
+      try{
+        const res=await server("crearReclamo", d);
+        const avisos=[]; if(res.aviso) avisos.push(res.aviso);
+        if(PEND.length){
+          const s=await subirLista(res.id_reclamo, "ingreso", "", PEND);
+          if(s.fallas.length) avisos.push("No se subieron: "+s.fallas.join("; "));
+          if(s.ok){ const a=await aBiprop(res.id_reclamo); if(a) avisos.push(a); }
+        }
+        busy(false);
+        toast(avisos.length?avisos.join(" "):"Reclamo "+res.id_reclamo+" guardado.", avisos.length>0);
+        refrescar().catch(()=>{});
+        ir("ficha", res.id_reclamo);
+      }catch(err){ fallo(err); }
+    };
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Ficha del reclamo                                                */
+  /* ---------------------------------------------------------------- */
+  let F=null, ABIERTAS={};
+  const URGENCIAS=[
+    { v:5, t:"5 · Riesgo para personas o daño activo" }, { v:4, t:"4 · Vivienda sin un servicio esencial" },
+    { v:3, t:"3 · Servicio afectado pero usable" }, { v:2, t:"2 · Molestia sin deterioro" }, { v:1, t:"1 · Estético o diferible" }
+  ];
+  const SECCION_NOMBRE={ ingreso:"Ingreso", visita:"Visita de diagnóstico", presupuesto:"Presupuestos", aprobacion:"Aprobación", terminado:"Finalización", cierre:"Cierre" };
+
+  function abrirFicha(id){
+    $("#main").innerHTML='<div class="card vacio">Cargando el reclamo…</div>';
+    server("getReclamo", id).then(res=>{ if(VISTA!=="ficha") return; F=res; abrirPorDefecto(); pintarFicha(); })
+      .catch(err=>{ $("#main").innerHTML=`<div class="card vacio"><b>No se pudo abrir el reclamo.</b><br>${esc(mensaje(err))}<br><br><button type="button" class="b2" onclick="location.reload()">Volver</button></div>`; });
+  }
+  /** Deja abierta la etapa que toca cargar. Un reclamo reabierto vuelve a la etapa 5 sin fecha de inicio: se abre esa. */
+  function abrirPorDefecto(){
+    const r=F.reclamo; ABIERTAS={};
+    if(r.estado!=="abierto" && r.estado!=="en_pausa") return;
+    if(r.etapa===5 && !r.fecha_programada) ABIERTAS[5]=true; else ABIERTAS[Math.min(7, r.etapa+1)]=true;
+  }
+  /** Después de guardar: toma la ficha nueva, deja abierta la etapa que sigue y refresca el tablero. */
+  function usarFicha(res, mensajeOk, aviso){
+    const antes=F?F.reclamo.etapa:0;
+    F=res.ficha||res; busy(false);
+    const r=F.reclamo;
+    if(r.etapa!==antes || r.estado==="cerrado" || r.estado==="desestimado") abrirPorDefecto();
+    pintarFicha();
+    toast(aviso||mensajeOk||"Guardado.", !!aviso);
+    refrescar().catch(()=>{});
+  }
+  const recargarFicha = (msg, aviso) => server("getReclamo", F.reclamo.id_reclamo).then(res=>usarFicha(res, msg, aviso));
+  const adjDe = (sec, idPres) => F.adjuntos.filter(a=>a.seccion===sec && (idPres===undefined || a.id_presupuesto===idPres));
+  const subidor = (sec, etiqueta) => selectorArchivos("up_"+sec, etiqueta);
+
+  function resumenEtapa(n){
+    const r=F.reclamo;
+    if(n===1){
+      const a=adjDe("ingreso"), env=a.filter(x=>x.en_biprop==="sí").length;
+      return fechaCorta(r.fecha_reclamo)+" · "+(a.length?plural(a.length,"adjunto","adjuntos"):"sin adjuntos")+(env?" · enviado a Biprop":(a.length&&CFG.biprop?" · pendiente de enviar a Biprop":""));
+    }
+    if(n===2) return fechaCorta(r.fecha_evaluacion)+" · "+nombreRubro(r.rubro_id)+" · urgencia "+r.urgencia+" · paga "+r.quien_paga.toLowerCase()+(r.visita_requiere?" · con visita de diagnóstico":"");
+    if(n===3){ const rec=F.presupuestos.filter(p=>p.fecha_recepcion).length;
+      return fechaCorta(r.fecha_presupuestado)+" · "+(r.sin_presupuesto?"sin presupuesto ("+r.sin_presupuesto_motivo+")":plural(rec,"presupuesto recibido","presupuestos recibidos")); }
+    if(n===4){ const p=F.presupuestos.filter(x=>x.id_presupuesto===r.id_presupuesto_elegido)[0];
+      return fechaCorta(r.aprob_fecha)+" · "+(p?p.proveedor+" · ":"")+(r.monto_aprobado!==""?pesos(r.monto_aprobado)+" · ":"")+"aprobó "+r.aprob_quien+" por "+r.aprob_medio.toLowerCase(); }
+    if(n===5) return fechaCorta(r.fecha_asignacion)+" · "+F.reclamo.vista.proveedor+(r.fecha_programada?" · inicio programado "+fechaCorta(r.fecha_programada):" · sin fecha de inicio")+(r.trabajo_iniciado?" · trabajo iniciado "+fechaCorta(r.fecha_inicio):"");
+    if(n===6) return fechaCorta(r.fecha_fin)+" · "+r.verificacion.toLowerCase();
+    if(n===7) return fechaCorta(r.fecha_cierre)+" · costo final "+pesos(r.costo_final)+" · conformidad: "+String(r.conformidad).toLowerCase();
+    return "";
+  }
+
+  function pintarFicha(){
+    const r=F.reclamo, v=r.vista, ed=r.estado==="abierto"||r.estado==="en_pausa";
+    const actual=ed?Math.min(7, r.etapa+1):0;
+    const estadoPill=r.estado==="cerrado"?'<span class="p pok">Cerrado</span>':r.estado==="desestimado"?`<span class="p pw">Desestimado: ${esc(r.desest_motivo)}${r.desest_detalle?" · "+esc(r.desest_detalle):""}</span>`:"";
+    const chips=[estadoPill,
+      r.urgencia!==""?`<span class="p ${r.urgencia>=5?"pa":"pi"}">Urgencia ${r.urgencia}</span>`:"",
+      r.rubro_id?`<span class="p pi">${esc(nombreRubro(r.rubro_id))}</span>`:"",
+      r.quien_paga?`<span class="p ${r.quien_paga==="A definir"?"pw":"pi"}">Paga: ${esc(r.quien_paga.toLowerCase())}</span>`:"",
+      `<span class="p pi">Reclama: ${esc(r.quien_reclama.toLowerCase())}</span>`,
+      r.reaperturas?`<span class="p pw">${plural(r.reaperturas,"reapertura","reaperturas")}</span>`:"",
+      r.reprogramaciones?`<span class="p pi">${plural(r.reprogramaciones,"reprogramación","reprogramaciones")}</span>`:"",
+      marcasFicha(v)].join("");
+
+    const secciones=CFG.etapas.map(e=>{
+      const n=e.n, hecha=n<=r.etapa, accesible=hecha || n===actual;
+      if(!accesible) return `<div class="card done"><b style="color:var(--soft)">${n}. ${e.nombre}</b><span class="m">Pendiente</span></div>`;
+      if(!ABIERTAS[n]) return `<div class="card done"><b>${n}. ${e.nombre}</b><span class="m">${hecha?esc(resumenEtapa(n)):"Pendiente"}</span><button type="button" class="b3 x" data-ver="${n}">${hecha?"Ver":"Cargar"}</button></div>`;
+      return `<div class="card etapa ${n===actual?"act":""}" id="et${n}">
+          <div class="rowsb"><h2>${n}. ${e.nombre}</h2>${hecha?`<button type="button" class="b3" data-ver="${n}">Plegar</button>`:""}</div>
+          <fieldset class="fs" ${ed?"":"disabled"} style="border:0;padding:0;margin:0;min-width:0;display:flex;flex-direction:column;gap:16px">${formEtapa(n, ed)}</fieldset>
+        </div>`;
+    }).join("");
+
+    $("#main").innerHTML=`
+      <a href="#" id="volver" style="font-weight:600;text-decoration:none">← Volver al tablero</a>
+      <div class="card pad" style="display:flex;flex-direction:column;gap:16px">
+        <div class="rowsb" style="align-items:flex-start">
+          <div style="min-width:0;flex:1 1 320px">
+            <div class="m">Reclamo ${esc(r.id_reclamo)} · ingresado el ${fechaAr(r.fecha_carga)} por ${esc(nombreUsuario(r.cargado_por))} · origen ${esc(r.origen.toLowerCase())}, por ${esc(r.canal.toLowerCase())}${r.reclamo_origen?` · derivado de <a href="#" data-ir="${esc(r.reclamo_origen)}">${esc(r.reclamo_origen)}</a>`:""}</div>
+            <h1 style="margin:6px 0 4px;overflow-wrap:anywhere">${esc(r.descripcion.length>110?r.descripcion.slice(0,107)+"…":r.descripcion)}</h1>
+            <div style="font-size:15px">Propiedad ${pad4(r.id_propiedad)} · ${esc(r.direccion)}</div>
+          </div>
+          <div class="btns">
+            <button type="button" class="b2" data-a="derivado">Reclamo derivado</button>
+            ${r.etapa>=6 && r.estado!=="desestimado"?'<button type="button" class="b2" data-a="reabrir">Reabrir</button>':""}
+            ${ed?'<button type="button" class="b2 red" data-a="desestimar">Desestimar</button>':""}
+          </div>
+        </div>
+        <div>${chips}</div>
+        <div>
+          <div class="rowsb" style="margin-bottom:10px"><b style="font-size:15px">Avance${r.estado==="desestimado"?" (desestimado)":""}</b><b style="font-size:22px;color:var(--blue2)">${v.pct}%</b></div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">${CFG.etapas.map(e=>`<div class="st ${e.n<=r.etapa?"ok":e.n===actual?"now":"no"}"><span></span>${e.n}. ${e.nombre}</div>`).join("")}</div>
+        </div>
+        ${F.otrosAbiertos.length?`<div class="aviso">La misma propiedad tiene otros reclamos abiertos: ${F.otrosAbiertos.map(o=>`<a href="#" data-ir="${esc(o.id_reclamo)}"><b>${esc(o.id_reclamo)}</b></a> (${esc(o.etapa_nombre)})`).join(", ")}</div>`:""}
+        ${F.derivados.length?`<div class="m">Reclamos derivados: ${F.derivados.map(o=>`<a href="#" data-ir="${esc(o.id_reclamo)}">${esc(o.id_reclamo)}</a>`).join(", ")}</div>`:""}
+      </div>
+      <div class="cols">
+        <div class="colmain">${secciones}</div>
+        <aside class="colside">
+          <div class="card pad"><h2 class="h">Notas</h2>
+            ${F.notas.map(n=>`<div class="li"><b>${esc(n.nombre)}</b> · ${momento(n.fecha)}<div class="pre">${esc(n.texto)}</div></div>`).join("")||'<div class="m">Sin notas.</div>'}
+            <div class="f" style="margin-top:10px"><label class="l" for="nn">Agregar nota</label><textarea id="nn" class="i" rows="2" style="min-height:64px"></textarea></div>
+            <button type="button" class="b2" style="margin-top:10px" data-a="nota">Agregar</button>
+          </div>
+          <div class="card pad"><h2 class="h">Adjuntos y Biprop</h2>${panelAdjuntos()}</div>
+          <div class="card pad"><h2 class="h">Historial</h2>
+            ${F.historial.map(h=>`<div class="li">${momento(h.fecha)} · ${esc(h.nombre)} · <b>${esc(h.accion)}</b>${h.detalle?"<br>"+esc(h.detalle):""}${h.motivo?'<br><span class="m">Motivo: '+esc(h.motivo)+"</span>":""}</div>`).join("")}
+          </div>
+        </aside>
+      </div>`;
+    enlazarFicha(ed);
+  }
+  const nombreUsuario = email => { const u=(ME.usuarios||[]).filter(x=>x.email===email)[0]; return u?u.nombre:email; };
+  const marcasFicha = v => v.alertas.map(a=>`<span class="p pa">${esc(a)}</span>`).concat(v.avisos.map(a=>`<span class="p ${/^(Sin fotos|En pausa)/.test(a)?"pw":"pi"}">${esc(a)}</span>`)).join("");
+
+  function panelAdjuntos(){
+    const r=F.reclamo;
+    const grupos=Object.keys(SECCION_NOMBRE).map(sec=>{
+      const l=adjDe(sec); if(!l.length) return "";
+      const link=sec==="ingreso"?r.biprop_url_ingreso:sec==="terminado"?r.biprop_url_fin:"";
+      const pend=l.filter(a=>a.en_biprop==="pendiente").length;
+      return `<div class="li"><b>${SECCION_NOMBRE[sec]}</b> · ${plural(l.length,"archivo","archivos")}${link?` · <a href="${esc(link)}" target="_blank" rel="noopener">ver evento en Biprop</a>`:""}${pend&&CFG.biprop?` · <span class="m">${pend} sin enviar a Biprop</span> <button type="button" class="b3" data-a="biprop">Reintentar</button>`:""}
+        <div style="margin-top:6px">${listaAdj(l)}</div></div>`;
+    }).join("");
+    return (grupos||'<div class="m">Sin adjuntos.</div>')+`<div class="li"><a href="${esc(r.carpeta_url)}" target="_blank" rel="noopener">Abrir la carpeta del reclamo en Drive</a></div>`;
+  }
+
+  /* Formularios de cada etapa */
+  function formEtapa(n, ed){
+    const r=F.reclamo, guardar=t=>ed?`<div class="btns"><button type="button" class="b1" data-g="${n}">${t}</button></div>`:"";
+    if(n===1){
+      const a=adjDe("ingreso"), sinFotos=!a.some(x=>esImagen(x.mime)||esVideo(x.mime));
+      return ingresoHtml(r)+(sinFotos?'<div class="aviso">Sin fotos ni videos. El reclamo avanza igual.</div>':"")+listaAdj(a)+(ed?subidor("ingreso","Agregar adjuntos"):"")+guardar("Guardar cambios");
+    }
+    if(n===2){
+      const rub=RUBROS.filter(x=>x.activo||x.id_rubro===r.rubro_id).map(x=>({v:x.id_rubro,t:x.nombre}));
+      return `<div class="grid">
+          ${sel("eCorr","¿Corresponde?",opts(["Sí","No"],"Sí"))}
+          ${sel("eRubro","Rubro",opts(rub,r.rubro_id,"Elegir…"))}
+          ${sel("eUrg","Urgencia (interna)",opts(URGENCIAS,r.urgencia,"Elegir…"))}
+          ${sel("ePaga","Quién paga",opts(CFG.quienPaga,r.quien_paga,"Elegir…"))}
+        </div>
+        <div id="eNoW" hidden class="sub"><div class="aviso">Con "No" el reclamo pasa a Desestimado.</div>
+          <div class="grid">${sel("eMot","Motivo",opts(CFG.motivosDesest,"No corresponde"))}${inp("eDet","Detalle","")}</div></div>
+        ${area("eNotas","Notas de evaluación",r.notas_evaluacion)}
+        <label class="chk"><input type="checkbox" id="eVis" ${r.visita_requiere?"checked":""}> Requiere visita de diagnóstico</label>
+        <div id="eVisW" class="sub" ${r.visita_requiere?"":"hidden"}>
+          <div class="grid">
+            ${campo("eVisQ","Quién va (proveedor o persona)",`<input id="eVisQ" class="i" type="text" list="dlProv" value="${esc(r.visita_quien)}"><datalist id="dlProv">${PROVS.filter(p=>p.estado==="activo").map(p=>`<option value="${esc(p.nombre)}">`).join("")}</datalist>`)}
+            ${fec("eVisP","Fecha programada",r.visita_programada)}
+            ${fec("eVisR","Fecha realizada",r.visita_realizada,`max="${HOY}"`)}
+          </div>
+          ${area("eVisRes","Qué encontró",r.visita_resultado)}
+          ${listaAdj(adjDe("visita"))}${ed?subidor("visita","Adjuntos de la visita (no van a Biprop)"):""}
+        </div>
+        ${ed?`<div class="btns"><button type="button" class="b1" data-g="2" id="eBtn">${r.etapa>=2?"Guardar cambios":"Guardar evaluación"}</button></div>`:""}`;
+    }
+    if(n===3){
+      const lista=F.presupuestos.map(p=>{
+        const est=p.estado==="recibido"?'<span class="p pok">Recibido</span>':p.estado==="pedido"?`<span class="p pw">Pedido · ${plural(p.dias_esperando,"día","días")} esperando</span>`:'<span class="p pi">Descartado</span>';
+        return `<div class="sub"><div class="rowsb"><div><b>${esc(p.proveedor)}</b> ${est}${p.id_presupuesto===r.id_presupuesto_elegido&&r.etapa>=4?'<span class="p pok">Elegido</span>':""}</div>
+            <div class="btns"><b>${pesos(p.monto)}</b>${ed?`<button type="button" class="b3" data-pres="${esc(p.id_presupuesto)}">Editar</button>`:""}</div></div>
+          <div class="m">Pedido el ${fechaAr(p.fecha_pedido)}${p.fecha_recepcion?" · recibido el "+fechaAr(p.fecha_recepcion):""}${p.plazo?" · plazo: "+esc(p.plazo):""}</div>
+          ${p.detalle?`<div class="pre">${esc(p.detalle)}</div>`:""}${listaAdj(adjDe("presupuesto", p.id_presupuesto))}</div>`;
+      }).join("");
+      const mot=String(r.sin_presupuesto_motivo||""), motBase=CFG.motivosSinPresupuesto.filter(m=>mot.indexOf(m)===0)[0]||CFG.motivosSinPresupuesto[0];
+      return `${lista||'<div class="m">Todavía no hay presupuestos. Con uno alcanza.</div>'}
+        ${ed?'<div class="btns"><button type="button" class="b2" data-pres="">Agregar presupuesto</button></div>':""}
+        <label class="chk"><input type="checkbox" id="spChk" ${r.sin_presupuesto?"checked":""}> Sin presupuesto</label>
+        <div id="spW" class="sub" ${r.sin_presupuesto?"":"hidden"}>
+          <div class="grid">${sel("spMot","Motivo",opts(CFG.motivosSinPresupuesto,motBase))}${inp("spDet","Detalle",mot.indexOf(": ")!==-1?mot.slice(mot.indexOf(": ")+2):"")}</div>
+        </div>
+        ${ed?`<div class="btns" id="spBtnW" ${r.sin_presupuesto?"":"hidden"}><button type="button" class="b1" data-g="3">Guardar "sin presupuesto"</button></div>`:""}`;
+    }
+    if(n===4){
+      const rec=F.presupuestos.filter(p=>p.fecha_recepcion);
+      const eleg=r.id_presupuesto_elegido || (rec.length===1?rec[0].id_presupuesto:"");
+      const pEleg=rec.filter(p=>p.id_presupuesto===eleg)[0];
+      const monto=r.monto_aprobado!==""?r.monto_aprobado:(pEleg?pEleg.monto:"");
+      return `${r.estado==="en_pausa"?`<div class="aviso rojo"><b>En pausa.</b> La aprobación fue rechazada el ${fechaAr(r.aprob_fecha)} por ${esc(r.aprob_quien)}. Se puede cargar otro presupuesto y volver a aprobar, o desestimar si el rechazo es definitivo.</div>`:""}
+        ${r.quien_paga==="A definir"?'<div class="aviso">Quién paga está en "A definir". No se puede aprobar hasta resolverlo en la etapa 2.</div>':""}
+        <div class="grid">
+          ${r.sin_presupuesto&&!rec.length?"":sel("aEleg","Presupuesto elegido",opts(rec.map(p=>({v:p.id_presupuesto,t:p.proveedor+" · "+pesos(p.monto)})),eleg,r.sin_presupuesto?"Ninguno (sin presupuesto)":"Elegir…"))}
+          ${sel("aRes","Resultado",opts(["Aprobado","Rechazado"],r.estado==="en_pausa"?"Aprobado":(r.aprob_resultado||"Aprobado")))}
+          ${inp("aQuien","Quién aprobó",r.estado==="en_pausa"?"":r.aprob_quien)}
+          ${sel("aMedio","Medio",opts(CFG.canales,r.aprob_medio||"WhatsApp"))}
+          ${fec("aFecha","Fecha de aprobación",r.estado==="en_pausa"?HOY:(r.aprob_fecha||HOY),`max="${HOY}"`)}
+          ${inp("aMonto",r.sin_presupuesto?"Monto tope aprobado (opcional)":"Monto aprobado ($)",monto===""?"":String(monto).replace(".",","),'inputmode="decimal"')}
+        </div>
+        ${r.quien_paga==="Compartido"?inp("aRep","Reparto del pago",r.reparto):""}
+        <label class="chk"><input type="checkbox" id="aDesc" ${r.descuenta_alquiler?"checked":""}> Se descuenta del alquiler</label>
+        ${area("aNotas","Notas",r.aprob_notas)}
+        ${listaAdj(adjDe("aprobacion"))}${ed?subidor("aprobacion","Comprobante de la aprobación (opcional)"):""}
+        ${ed?`<div class="btns"><button type="button" class="b1" data-g="4">Guardar aprobación</button>${r.estado==="en_pausa"?'<button type="button" class="b2 red" data-a="desestimar">Desestimar</button>':""}</div>`:""}`;
+    }
+    if(n===5){
+      const pEleg=F.presupuestos.filter(p=>p.id_presupuesto===r.id_presupuesto_elegido)[0];
+      const delInq=r.etapa<5 && r.sin_presupuesto && /inquilino/i.test(r.sin_presupuesto_motivo);
+      const esTexto=r.proveedor_texto!=="" || delInq;
+      const actualProv=r.proveedor_id || (r.etapa<5&&pEleg?pEleg.proveedor_id:"");
+      return `<div class="grid">
+          ${campo("sProv","Proveedor asignado",`<select id="sProv" class="i">${provOpciones(r.rubro_id, esTexto?"":actualProv)}<option value="__texto" ${esTexto?"selected":""}>Proveedor del inquilino (escribir)</option></select>`)}
+          <div id="sTxtW" ${esTexto?"":"hidden"}>${inp("sTxt","Nombre del proveedor del inquilino",r.proveedor_texto)}</div>
+          ${fec("sAsig","Fecha de asignación",r.fecha_asignacion||HOY)}
+          ${fec("sProg","Fecha programada de inicio",r.fecha_programada)}
+          ${fec("sFin","Fecha estimada de finalización (opcional)",r.fecha_estimada_fin)}
+        </div>
+        <div id="sMotW" hidden>${inp("sMot","Motivo del cambio de proveedor","")}</div>
+        ${inp("sAcc","Coordinación de acceso",r.acceso,'placeholder="Horario, quién abre, a quién avisar"')}
+        <label class="chk"><input type="checkbox" id="sLlaves" ${r.llaves_oficina?"checked":""}> Llaves en la oficina</label>
+        ${area("sNotas","Notas",r.asig_notas)}
+        <label class="chk hl"><input type="checkbox" id="sIni" ${r.trabajo_iniciado?"checked":""}> Trabajo iniciado (sube a ${CFG.pctIniciado}%)</label>
+        <div id="sIniW" ${r.trabajo_iniciado?"":"hidden"} class="grid">${fec("sIniF","Fecha de inicio",r.fecha_inicio||HOY,`max="${HOY}"`)}</div>
+        ${guardar(r.etapa>=5?"Guardar cambios":"Guardar asignación")}`;
+    }
+    if(n===6){
+      const a=adjDe("terminado"), sinFotos=!a.some(x=>esImagen(x.mime)||esVideo(x.mime));
+      return `<div class="grid">
+          ${fec("tFin","Fecha de finalización",r.fecha_fin||HOY,`max="${HOY}"`)}
+          ${sel("tVer","Cómo se verificó",opts(CFG.verificacion,r.verificacion,"Elegir…"))}
+        </div>
+        ${area("tTrab","Trabajo realizado",r.trabajo_realizado,'rows="4"')}
+        ${area("tNotas","Notas",r.term_notas)}
+        ${sinFotos?'<div class="aviso">Todavía no hay fotos ni videos del trabajo terminado.</div>':""}
+        ${listaAdj(a)}${ed?subidor("terminado","Adjuntos del trabajo terminado"+(CFG.biprop?" (van a Biprop)":"")):""}
+        ${guardar(r.etapa>=6?"Guardar cambios":"Guardar como terminado")}`;
+    }
+    // n === 7
+    const quienDef=r.conformidad_quien || (CFG.conformidadQuien.indexOf(r.quien_reclama)!==-1?r.quien_reclama:"Inquilino");
+    const faltaComp=r.descuenta_alquiler && r.proveedor_texto && !adjDe("cierre").length;
+    const costo=r.costo_final!==""?r.costo_final:r.monto_aprobado;
+    return `<div class="grid">
+        ${inp("cCosto","Costo final ($)",costo===""?"":String(costo).replace(".",","),'inputmode="decimal"')}
+        ${sel("cConf","Conformidad",opts(["Sí","No"],r.conformidad||"Sí"))}
+        ${sel("cQuien","Quién dio la conformidad",opts(CFG.conformidadQuien,quienDef))}
+        ${fec("cFecha","Fecha de cierre",r.fecha_cierre||HOY,`max="${HOY}"`)}
+        ${r.proveedor_id?sel("cCal","Calificación del proveedor (interna)",opts([5,4,3,2,1],r.calificacion,"Sin calificar")):""}
+      </div>
+      <div class="m" id="cDif"></div>
+      ${r.proveedor_texto?'<div class="m">Arreglo del inquilino con su proveedor: el costo final es el importe que se descuenta del alquiler. La calificación no aplica.</div>':""}
+      <div id="cNoW" class="sub" hidden>
+        <div class="aviso">Sin conformidad el reclamo no cierra. Elegí qué hacer:</div>
+        <label class="chk"><input type="radio" name="cAcc" value="reabrir" checked> Reabrir (vuelve a la etapa 5)</label>
+        <label class="chk"><input type="radio" name="cAcc" value="cerrar_igual"> Cerrar igual</label>
+        ${inp("cMot","Motivo","")}
+      </div>
+      ${area("cNotas","Notas de cierre",r.cierre_notas)}
+      ${faltaComp?'<div class="aviso">Falta el comprobante: es un arreglo del inquilino con descuento del alquiler.</div>':""}
+      ${listaAdj(adjDe("cierre"))}${ed?subidor("cierre","Comprobante o factura (queda en el reclamo, no va a Biprop)"):""}
+      ${ed?'<div class="btns"><button type="button" class="b1" data-g="7" id="cBtn">Cerrar reclamo</button></div>':""}`;
+  }
+
+  function enlazarFicha(ed){
+    const r=F.reclamo, id=r.id_reclamo, main=$("#main");
+    $("#volver").onclick=e=>{ e.preventDefault(); ir("tablero"); };
+    if($("#pq")) ingresoEnlazar(id);
+
+    // Comportamiento de los formularios abiertos
+    const on=(sel_, ev, fn)=>{ const e=$(sel_); if(e) e.addEventListener(ev, fn); };
+    on("#eCorr","change",e=>{ const no=e.target.value==="No"; $("#eNoW").hidden=!no; if($("#eBtn")) $("#eBtn").textContent=no?"Desestimar":(r.etapa>=2?"Guardar cambios":"Guardar evaluación"); });
+    on("#eVis","change",e=>{ $("#eVisW").hidden=!e.target.checked; });
+    on("#spChk","change",e=>{ $("#spW").hidden=!e.target.checked; if($("#spBtnW")) $("#spBtnW").hidden=!e.target.checked && !r.sin_presupuesto; });
+    on("#aEleg","change",e=>{ const p=F.presupuestos.filter(x=>x.id_presupuesto===e.target.value)[0]; if(p) $("#aMonto").value=String(p.monto).replace(".",","); });
+    on("#aRes","change",e=>{ const l=$('label[for="aQuien"]'); if(l) l.textContent=e.target.value==="Rechazado"?"Quién rechazó":"Quién aprobó"; });
+    const provSel=()=>{ const s=$("#sProv"); if(!s) return;
+      $("#sTxtW").hidden=s.value!=="__texto";
+      const ahora=s.value==="__texto"?val("sTxt"):s.value, antes=r.proveedor_id||r.proveedor_texto;
+      $("#sMotW").hidden=!(r.etapa>=5 && ahora!==antes); };
+    on("#sProv","change",provSel); on("#sTxt","input",provSel);
+    on("#sIni","change",e=>{ $("#sIniW").hidden=!e.target.checked; });
+    on("#cConf","change",e=>{ $("#cNoW").hidden=e.target.value!=="No"; });
+    const dif=()=>{ const c=aNumero(val("cCosto")); if(!$("#cDif")) return;
+      $("#cDif").textContent=(c!==""&&!isNaN(c)&&r.monto_aprobado!==""&&c!==Number(r.monto_aprobado))?(r.sin_presupuesto&&c<=r.monto_aprobado?"":"El costo final "+(r.sin_presupuesto?"supera el tope aprobado":"difiere del monto aprobado")+" ("+pesos(r.monto_aprobado)+")."):""; };
+    on("#cCosto","input",dif); dif();
+    if($("#cConf") && $("#cConf").value==="No") $("#cNoW").hidden=false;
+
+    main.onchange=async e=>{
+      // Adjuntos de la ficha: se suben al elegirlos.
+      if(e.target.type!=="file" || !/^up_/.test(e.target.id) || !e.target.files.length) return;
+      const sec=e.target.id.replace(/^up_/,"").replace(/Cam$/,""), files=[...e.target.files];
+      e.target.value="";
+      const s=await subirLista(id, sec, "", files);
+      let aviso=s.fallas.length?"No se subieron: "+s.fallas.join("; "):"";
+      if(s.ok && (sec==="ingreso"||sec==="terminado")){ const a=await aBiprop(id); if(a) aviso=(aviso?aviso+" ":"")+a; }
+      recargarFicha(plural(s.ok,"archivo subido","archivos subidos")+".", aviso).catch(fallo);
+    };
+
+    main.onclick=async e=>{
+      const t=e.target;
+      if(t.dataset.pick){ $("#"+t.dataset.pick).click(); return; }
+      if(t.dataset.ir){ e.preventDefault(); ir("ficha", t.dataset.ir); return; }
+      if(t.dataset.ver){ const n=Number(t.dataset.ver); ABIERTAS[n]=!ABIERTAS[n]; pintarFicha(); const el=$("#et"+n); if(el) el.scrollIntoView({block:"nearest"}); return; }
+      if(t.dataset.pres!==undefined){ presupuestoModal(F.presupuestos.filter(p=>p.id_presupuesto===t.dataset.pres)[0]||null); return; }
+      const a=t.dataset.a, g=t.dataset.g;
+      try{
+        if(a==="nota"){ const txt=val("nn"); if(!txt){ toast("Escribí la nota.", true); return; } busy(true,"Guardando la nota…"); usarFicha(await server("agregarNota", id, txt), "Nota agregada."); }
+        else if(a==="biprop"){ const av=await aBiprop(id); await recargarFicha("Enviado a Biprop.", av); }
+        else if(a==="derivado"){ ir("nuevo", F); }
+        else if(a==="desestimar"){
+          const m=await pedirTexto("Desestimar el reclamo "+id, "Detalle (obligatorio si el motivo es Otro)", "Desestimar", CFG.motivosDesest);
+          if(!m) return; busy(true,"Desestimando…"); usarFicha(await server("desestimar", id, m.motivo, m.detalle), "Reclamo desestimado.");
+        }
+        else if(a==="reabrir"){
+          const m=await pedirTexto("Reabrir el reclamo "+id, "Motivo de la reapertura", "Reabrir");
+          if(!m) return; busy(true,"Reabriendo…"); usarFicha(await server("reabrir", id, m), "Reclamo reabierto: volvió a la etapa 5.");
+        }
+        else if(g) await guardarEtapa(Number(g));
+      }catch(err){ fallo(err); }
+    };
+  }
+
+  async function guardarEtapa(n){
+    const r=F.reclamo, id=r.id_reclamo;
+    if(n===1){
+      const d=ingresoDatos(); if(!d.id_propiedad){ toast("Elegí la propiedad.", true); return; }
+      busy(true,"Guardando…"); const res=await server("guardarIngreso", id, d); usarFicha(res, "Ingreso actualizado.", res.aviso);
+    }
+    else if(n===2){
+      const no=val("eCorr")==="No";
+      const d=no?{ corresponde:false, motivo:val("eMot"), detalle:val("eDet") }:{
+        corresponde:true, rubro_id:val("eRubro"), urgencia:val("eUrg"), quien_paga:val("ePaga"), notas_evaluacion:val("eNotas"),
+        visita_requiere:tildado("eVis"), visita_quien:val("eVisQ"), visita_programada:val("eVisP"), visita_realizada:val("eVisR"), visita_resultado:val("eVisRes") };
+      busy(true, no?"Desestimando…":"Guardando la evaluación…");
+      usarFicha(await server("guardarEvaluacion", id, d), no?"Reclamo desestimado.":"Evaluación guardada.");
+    }
+    else if(n===3){
+      busy(true,"Guardando…");
+      usarFicha(await server("guardarSinPresupuesto", id, tildado("spChk"), val("spMot"), val("spDet")), "Guardado.");
+    }
+    else if(n===4){
+      const monto=aNumero(val("aMonto")); if(isNaN(monto)){ toast("Revisá el monto aprobado.", true); return; }
+      busy(true,"Guardando la aprobación…");
+      usarFicha(await server("guardarAprobacion", id, { id_presupuesto_elegido:val("aEleg"), resultado:val("aRes"), aprob_quien:val("aQuien"),
+        aprob_medio:val("aMedio"), aprob_fecha:val("aFecha"), monto_aprobado:monto, reparto:val("aRep"), descuenta_alquiler:tildado("aDesc"), aprob_notas:val("aNotas") }),
+        val("aRes")==="Rechazado"?"Rechazo registrado: el reclamo queda en pausa.":"Aprobación guardada.");
+    }
+    else if(n===5){
+      const texto=val("sProv")==="__texto";
+      busy(true,"Guardando la asignación…");
+      usarFicha(await server("guardarAsignacion", id, { proveedor_id:texto?"":val("sProv"), proveedor_texto:texto?val("sTxt"):"", fecha_asignacion:val("sAsig"),
+        fecha_programada:val("sProg"), fecha_estimada_fin:val("sFin"), acceso:val("sAcc"), llaves_oficina:tildado("sLlaves"), asig_notas:val("sNotas"),
+        trabajo_iniciado:tildado("sIni"), fecha_inicio:val("sIniF"), motivo_cambio:val("sMot") }), "Asignación guardada.");
+    }
+    else if(n===6){
+      busy(true,"Guardando…");
+      const res=await server("guardarTerminado", id, { fecha_fin:val("tFin"), trabajo_realizado:val("tTrab"), verificacion:val("tVer"), term_notas:val("tNotas") });
+      const antes=r.etapa; F=res.ficha;
+      // Con la etapa 6 completa se crea el evento de finalización en Biprop con los adjuntos ya subidos.
+      const aviso=F.adjuntos.some(a=>a.seccion==="terminado"&&a.en_biprop==="pendiente")?await aBiprop(id):"";
+      F.reclamo.etapa=antes; await recargarFicha("Trabajo terminado.", aviso);
+    }
+    else if(n===7){
+      const costo=aNumero(val("cCosto")); if(costo===""||isNaN(costo)){ toast("Escribí el costo final (puede ser 0).", true); return; }
+      const no=val("cConf")==="No", acc=no?($('input[name="cAcc"]:checked')||{}).value:"";
+      busy(true, acc==="reabrir"?"Reabriendo…":"Cerrando el reclamo…");
+      usarFicha(await server("guardarCierre", id, { costo_final:costo, conformidad:!no, conformidad_quien:val("cQuien"), fecha_cierre:val("cFecha"),
+        calificacion:val("cCal"), cierre_notas:val("cNotas"), accion:acc, motivo:val("cMot") }),
+        acc==="reabrir"?"Reclamo reabierto: volvió a la etapa 5.":"Reclamo cerrado. Pasó al historial.");
+    }
+  }
+
+  /** Alta o edición de un presupuesto. */
+  function presupuestoModal(p){
+    const r=F.reclamo, nuevo=!p;
+    let pend=[];
+    const el=modal(`<h2>${nuevo?"Agregar presupuesto":"Editar presupuesto"}</h2>
+      <div class="f"><label class="l" for="qProv">Proveedor</label><select id="qProv" class="i">${provOpciones(r.rubro_id, p?p.proveedor_id:"")}</select>
+        <button type="button" class="b3" data-a="nuevoProv" style="align-self:flex-start">+ Dar de alta un proveedor</button></div>
+      <div class="grid">${fec("qPed","Fecha de pedido",p?p.fecha_pedido:String(r.fecha_carga).slice(0,10),`max="${HOY}"`)}</div>
+      <label class="chk"><input type="checkbox" id="qRec" ${nuevo||p.fecha_recepcion?"checked":""}> Ya lo recibí</label>
+      <div class="grid" id="qRecW">${fec("qFec","Fecha de recepción",p&&p.fecha_recepcion?p.fecha_recepcion:HOY,`max="${HOY}"`)}${inp("qMonto","Monto ($)",p&&p.monto!==""?String(p.monto).replace(".",","):"",'inputmode="decimal"')}</div>
+      ${area("qDet","Detalle del trabajo",p?p.detalle:"")}
+      ${inp("qPlazo","Plazo estimado de ejecución",p?p.plazo:"")}
+      ${p?listaAdj(adjDe("presupuesto", p.id_presupuesto)):""}
+      ${selectorArchivos("qFiles","Adjunto")}<div id="qPend" class="m"></div>
+      <div class="btns"><button type="button" class="b1" data-a="ok">Guardar presupuesto</button><button type="button" class="b2" data-a="no">Cancelar</button></div>`);
+    const recW=()=>{ $("#qRecW", el).hidden=!$("#qRec", el).checked; }; recW();
+    $("#qRec", el).onchange=recW;
+    ["qFiles","qFilesCam"].forEach(i=>{ $("#"+i, el).onchange=e=>{ pend=pend.concat([...e.target.files]); e.target.value=""; $("#qPend", el).textContent=pend.length?"Para subir: "+pend.map(f=>f.name).join(", "):""; }; });
+    el.addEventListener("click", async e=>{
+      const t=e.target;
+      if(t.dataset.pick){ $("#"+t.dataset.pick, el).click(); return; }
+      const a=t.dataset.a; if(!a) return;
+      if(a==="no"){ el.cerrar(); return; }
+      if(a==="nuevoProv"){ const idNuevo=await proveedorModal(null, r.rubro_id); if(idNuevo) $("#qProv", el).innerHTML=provOpciones(r.rubro_id, idNuevo); return; }
+      const rec=$("#qRec", el).checked, monto=rec?aNumero(val("qMonto")):"";
+      if(rec && (monto===""||isNaN(monto))){ toast("Escribí el monto del presupuesto recibido.", true); return; }
+      busy(true,"Guardando el presupuesto…");
+      try{
+        const res=await server("guardarPresupuesto", r.id_reclamo, { id_presupuesto:p?p.id_presupuesto:"", proveedor_id:val("qProv"), fecha_pedido:val("qPed"),
+          fecha_recepcion:rec?val("qFec"):"", monto:monto, detalle:val("qDet"), plazo:val("qPlazo") });
+        let aviso="";
+        if(pend.length){ const s=await subirLista(r.id_reclamo, "presupuesto", res.id_presupuesto, pend); if(s.fallas.length) aviso="No se subieron: "+s.fallas.join("; "); }
+        el.cerrar();
+        if(pend.length) await recargarFicha("Presupuesto guardado.", aviso); else usarFicha(res, "Presupuesto guardado.");
+      }catch(err){ fallo(err); }
+    });
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Proveedores y rubros                                             */
+  /* ---------------------------------------------------------------- */
+  let PV=null;
+  /** Alta o edición de proveedor. Resuelve con el id guardado, o null si se cancela. */
+  function proveedorModal(p, rubroSugerido){
+    return new Promise(resolve=>{
+      const rub=RUBROS.filter(x=>x.activo || (p && p.rubros.indexOf(x.id_rubro)!==-1));
+      const el=modal(`<h2>${p?"Editar proveedor":"Nuevo proveedor"}</h2>
+        ${inp("vNom","Nombre o razón social",p?p.nombre:"")}
+        <div class="grid">${inp("vCon","Persona de contacto",p?p.contacto:"")}${inp("vTel","Teléfono",p?p.telefono:"",'inputmode="tel"')}${inp("vMail","Mail",p?p.mail:"",'inputmode="email"')}</div>
+        <div class="f"><span class="l">Rubros habilitados (al menos uno)</span><div class="grid" style="gap:0 14px">
+          ${rub.map(x=>`<label class="chk"><input type="checkbox" class="vRub" value="${esc(x.id_rubro)}" ${(p?p.rubros.indexOf(x.id_rubro)!==-1:x.id_rubro===rubroSugerido)?"checked":""}> ${esc(x.nombre)}</label>`).join("")}</div></div>
+        ${area("vNotas","Notas",p?p.notas:"")}
+        <div id="vDup"></div>
+        <div class="btns"><button type="button" class="b1" data-a="ok">Guardar proveedor</button><button type="button" class="b2" data-a="no">Cancelar</button></div>`);
+      let confirmado=false;
+      el.addEventListener("click", async e=>{
+        const a=e.target.dataset.a; if(!a) return;
+        if(a==="no"){ el.cerrar(); resolve(null); return; }
+        busy(true,"Guardando el proveedor…");
+        try{
+          const res=await server("guardarProveedor", { id_proveedor:p?p.id_proveedor:"", nombre:val("vNom"), contacto:val("vCon"), telefono:val("vTel"), mail:val("vMail"),
+            notas:val("vNotas"), rubros:$$(".vRub", el).filter(c=>c.checked).map(c=>c.value) }, confirmado);
+          busy(false);
+          if(res.duplicados){
+            // Aviso de duplicado: se muestra y, si se vuelve a guardar, se confirma.
+            confirmado=true;
+            $("#vDup", el).innerHTML=`<div class="aviso">Ya existe un proveedor con el mismo nombre o teléfono: ${res.duplicados.map(d=>`<b>${esc(d.nombre)}</b> (${esc(d.telefono)}${d.estado==="baja"?", de baja":""})`).join(", ")}. Si es otro, tocá Guardar de nuevo.</div>`;
+            return;
+          }
+          PROVS=res.proveedores; el.cerrar(); toast("Proveedor guardado."); resolve(res.id_proveedor);
+        }catch(err){ fallo(err); }
+      });
+    });
+  }
+
+  function verProveedores(){
+    $("#main").innerHTML='<div class="card vacio">Cargando proveedores…</div>';
+    server("getProveedores").then(res=>{ if(VISTA!=="proveedores") return; PV=res; RUBROS=res.rubros.map(r=>({ id_rubro:r.id_rubro, nombre:r.nombre, activo:r.activo })); pintarProveedores(); }).catch(fallo);
+  }
+  const estrellas = c => c===""?'<span class="m">—</span>':String(c).replace(".",",")+" ★";
+  function pintarProveedores(){
+    const filas=PV.proveedores.map(p=>`<div role="row" class="row bd" data-id="${esc(p.id_proveedor)}">
+        <div role="cell"><b>${esc(p.nombre)}</b>${p.estado==="baja"?' <span class="p pi">De baja</span>':""}<div class="m">${esc(p.telefono)}</div></div>
+        <div role="cell" class="m">${esc(p.rubros.map(nombreRubro).join(", "))}</div>
+        <div role="cell">${esc(p.contacto)}</div>
+        <div role="cell">${p.stats.realizados}</div><div role="cell">${p.stats.en_curso}</div><div role="cell">${estrellas(p.stats.calificacion)}</div>
+        <div role="cell">${p.stats.reaperturas}</div><div role="cell">${p.stats.demoras}</div></div>`).join("");
+    $("#main").innerHTML=`
+      <div class="rowsb"><h1>Proveedores</h1><button type="button" class="b1" id="vNuevo">Nuevo proveedor</button></div>
+      <div class="card tw t-prv"><div role="table" aria-label="Proveedores" id="vTabla">
+        <div role="row" class="row hd">${["Proveedor","Rubros","Contacto","Realizados","En curso","Calificación","Reaperturas","Demoras"].map(t=>`<div role="columnheader" class="th">${t}</div>`).join("")}</div>
+        ${filas||'<div class="vacio">Todavía no hay proveedores. Se van cargando a medida que aparecen.</div>'}</div></div>
+      <div class="card pad"><h2 style="margin-bottom:12px">Rubros</h2>
+        <table class="t"><tbody>${PV.rubros.map(r=>`<tr><td>${esc(r.nombre)}${r.activo?"":' <span class="p pi">Desactivado</span>'}</td>
+          <td class="num"><button type="button" class="b3" data-ren="${esc(r.id_rubro)}">Renombrar</button> &nbsp; <button type="button" class="b3" data-act="${esc(r.id_rubro)}">${r.activo?"Desactivar":"Activar"}</button></td></tr>`).join("")}</tbody></table>
+        <div class="btns" style="margin-top:14px"><div class="f" style="flex:1 1 220px"><label class="l" for="rNuevo">Agregar rubro</label><input id="rNuevo" class="i" type="text"></div><button type="button" class="b2" id="rAdd" style="align-self:flex-end">Agregar</button></div>
+      </div>`;
+    $("#vNuevo").onclick=async()=>{ if(await proveedorModal(null,"")) verProveedores(); };
+    $("#vTabla").onclick=e=>{ const f=e.target.closest(".bd"); if(f) proveedorFicha(PV.proveedores.filter(p=>p.id_proveedor===f.dataset.id)[0]); };
+    const rubro=async d=>{ busy(true,"Guardando el rubro…"); try{ await server("guardarRubro", d); busy(false); verProveedores(); }catch(err){ fallo(err); } };
+    $("#rAdd").onclick=()=>{ const n=val("rNuevo"); if(!n){ toast("Escribí el nombre del rubro.", true); return; } rubro({ nombre:n }); };
+    $("#main").onclick=async e=>{
+      const ren=e.target.dataset.ren, act=e.target.dataset.act;
+      if(ren){ const r=PV.rubros.filter(x=>x.id_rubro===ren)[0]; const n=await pedirTexto("Renombrar el rubro “"+r.nombre+"”","Nombre nuevo","Guardar"); if(n) rubro({ id_rubro:ren, nombre:n, activo:r.activo }); }
+      if(act){ const r=PV.rubros.filter(x=>x.id_rubro===act)[0]; rubro({ id_rubro:act, nombre:r.nombre, activo:!r.activo }); }
+    };
+  }
+  function proveedorFicha(p){
+    const s=p.stats;
+    const el=modal(`<div class="rowsb"><h2>${esc(p.nombre)}</h2>${p.estado==="baja"?'<span class="p pi">De baja</span>':'<span class="p pok">Activo</span>'}</div>
+      <div class="m">${esc(p.contacto)}${p.contacto?" · ":""}${esc(p.telefono)}${p.mail?" · "+esc(p.mail):""}<br>Rubros: ${esc(p.rubros.map(nombreRubro).join(", "))}<br>
+        Alta: ${fechaAr(p.fecha_alta)} por ${esc(p.cargado_por_nombre)}${p.estado==="baja"?"<br>Baja: "+fechaAr(p.baja_fecha)+" · "+esc(p.baja_motivo):""}</div>
+      ${p.notas?`<div class="nota pre">${esc(p.notas)}</div>`:""}
+      <table class="t"><tbody>
+        <tr><td>Trabajos realizados</td><td class="num">${s.realizados}</td></tr><tr><td>En curso</td><td class="num">${s.en_curso}</td></tr>
+        <tr><td>Calificación promedio</td><td class="num">${estrellas(s.calificacion)}</td></tr><tr><td>Reaperturas</td><td class="num">${s.reaperturas}</td></tr>
+        <tr><td>Demoras</td><td class="num">${s.demoras}</td></tr><tr><td>Días promedio para presupuestar</td><td class="num">${s.dias_presupuestar===""?"—":String(s.dias_presupuestar).replace(".",",")}</td></tr>
+        <tr><td>Monto total (reclamos cerrados)</td><td class="num">${pesos(s.monto_total)||"$ 0"}</td></tr></tbody></table>
+      <div><div class="h">Reclamos</div>${s.reclamos.map(x=>`<div class="li"><a href="#" data-ir="${esc(x.id_reclamo)}"><b>${esc(x.id_reclamo)}</b></a> · ${pad4(x.id_propiedad)} ${esc(x.direccion)} · ${esc(x.estado==="cerrado"?"Cerrado":x.etapa_nombre)}</div>`).join("")||'<div class="m">Ninguno todavía.</div>'}</div>
+      <div class="btns"><button type="button" class="b1" data-a="editar">Editar</button>
+        ${p.estado==="baja"?'<button type="button" class="b2" data-a="reactivar">Reactivar</button>':'<button type="button" class="b2 red" data-a="baja">Dar de baja</button>'}
+        <button type="button" class="b2" data-a="no">Cerrar</button></div>`);
+    el.addEventListener("click", async e=>{
+      const a=e.target.dataset.a;
+      if(e.target.dataset.ir){ e.preventDefault(); el.cerrar(); ir("ficha", e.target.dataset.ir); return; }
+      if(!a) return;
+      if(a==="no"){ el.cerrar(); return; }
+      try{
+        if(a==="editar"){ el.cerrar(); if(await proveedorModal(p,"")) verProveedores(); }
+        else if(a==="baja"){ const m=await pedirTexto("Dar de baja a "+p.nombre,"Motivo de la baja","Dar de baja"); if(!m) return; busy(true,"Guardando…"); await server("bajaProveedor", p.id_proveedor, m); busy(false); el.cerrar(); verProveedores(); }
+        else if(a==="reactivar"){ busy(true,"Guardando…"); await server("reactivarProveedor", p.id_proveedor); busy(false); el.cerrar(); verProveedores(); }
+      }catch(err){ fallo(err); }
+    });
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Historial (cerrados y desestimados)                              */
+  /* ---------------------------------------------------------------- */
+  let HIS=null;
+  const HF={ q:"", estado:"", urgencia:"", rubro:"", proveedor:"", desde:"", hasta:"" };
+  function verHistorial(){
+    $("#main").innerHTML='<div class="card vacio">Cargando el historial…</div>';
+    server("getHistorial").then(res=>{ if(VISTA!=="historial") return; HIS=res.reclamos;
+      $("#main").innerHTML=`
+        <div class="rowsb"><h1>Historial</h1><button type="button" class="b2" id="hExp">Exportar a planilla lo filtrado</button></div>
+        <div class="filtros">
+          <div class="f q"><label class="l" for="hq">Buscar</label><input id="hq" class="i" type="search" placeholder="ID de propiedad, dirección o N° de reclamo" value="${esc(HF.q)}"></div>
+          ${sel("hEst","Estado",opts([{v:"cerrado",t:"Cerrados"},{v:"desestimado",t:"Desestimados"}],HF.estado,"Todos"))}
+          ${sel("hUrg","Urgencia",opts([5,4,3,2,1],HF.urgencia,"Todas"))}
+          ${sel("hRub","Rubro",opts(RUBROS.map(r=>({v:r.id_rubro,t:r.nombre})),HF.rubro,"Todos"))}
+          ${sel("hProv","Proveedor",opts(PROVS.map(p=>({v:p.id_proveedor,t:p.nombre})),HF.proveedor,"Todos"))}
+          ${fec("hDesde","Desde",HF.desde)}${fec("hHasta","Hasta",HF.hasta)}
+        </div>
+        <div class="m" id="hCant"></div>
+        <div class="card tw t-his"><div role="table" aria-label="Historial de reclamos" id="hTabla"></div></div>`;
+      $("#hq").oninput=e=>{ HF.q=e.target.value; pintarHistorial(); };
+      [["hEst","estado"],["hUrg","urgencia"],["hRub","rubro"],["hProv","proveedor"],["hDesde","desde"],["hHasta","hasta"]].forEach(([id,k])=>{ $("#"+id).onchange=e=>{ HF[k]=e.target.value; pintarHistorial(); }; });
+      $("#hTabla").onclick=e=>{ const f=e.target.closest(".bd"); if(f) ir("ficha", f.dataset.id); };
+      $("#hExp").onclick=async()=>{
+        const ids=historialFiltrado().map(r=>r.id_reclamo); if(!ids.length){ toast("No hay reclamos para exportar con esos filtros.", true); return; }
+        busy(true,"Armando la planilla…");
+        try{ const x=await server("exportarHistorial", ids); busy(false);
+          const el=modal(`<h2>Exportación lista</h2><div>${plural(x.cantidad,"reclamo exportado","reclamos exportados")}.</div><div><a href="${esc(x.url)}" target="_blank" rel="noopener"><b>Abrir la planilla</b></a></div><div class="btns"><button type="button" class="b2" data-a="no">Cerrar</button></div>`);
+          el.addEventListener("click", e=>{ if(e.target.dataset.a) el.cerrar(); });
+        }catch(err){ fallo(err); }
+      };
+      pintarHistorial();
+    }).catch(fallo);
+  }
+  const fechaFin = r => r.estado==="cerrado" ? r.fecha_cierre : r.desest_fecha;
+  function historialFiltrado(){
+    const q=norm(HF.q);
+    return HIS.filter(r=>{
+      if(HF.estado && r.estado!==HF.estado) return false;
+      if(HF.urgencia && String(r.urgencia)!==HF.urgencia) return false;
+      if(HF.rubro && r.rubro_id!==HF.rubro) return false;
+      if(HF.proveedor && r.proveedor_id!==HF.proveedor) return false;
+      if(HF.desde && fechaFin(r)<HF.desde) return false;
+      if(HF.hasta && fechaFin(r)>HF.hasta) return false;
+      if(q && norm(r.id_reclamo+" "+pad4(r.id_propiedad)+" "+r.direccion).indexOf(q)===-1) return false;
+      return true;
+    });
+  }
+  function pintarHistorial(){
+    const l=historialFiltrado();
+    $("#hCant").textContent=plural(l.length,"reclamo","reclamos")+(l.length!==HIS.length?" de "+HIS.length:"");
+    $("#hTabla").innerHTML=`<div role="row" class="row hd">${["N°","Propiedad","Rubro","Urg.","Estado","Proveedor","Fecha","Costo final","Días"].map(t=>`<div role="columnheader" class="th">${t}</div>`).join("")}</div>`+
+      (l.map(r=>`<div role="row" class="row bd" data-id="${esc(r.id_reclamo)}">
+        <div role="cell"><b style="color:var(--blue)">${esc(r.id_reclamo)}</b></div>
+        <div role="cell"><div style="font-weight:600">${pad4(r.id_propiedad)}</div><div class="m">${esc(r.direccion)}</div></div>
+        <div role="cell" class="${r.rubro?"":"m"}">${esc(r.rubro||"Sin evaluar")}</div><div role="cell">${urg(r.urgencia)}</div>
+        <div role="cell">${r.estado==="cerrado"?'<span class="p pok">Cerrado</span>':`<span class="p pw" title="${esc(r.desest_motivo)}">Desestimado</span>`}</div>
+        <div role="cell" class="${r.proveedor?"":"m"}">${esc(r.proveedor||"—")}</div>
+        <div role="cell">${fechaAr(fechaFin(r))}</div><div role="cell">${pesos(r.costo_final)||'<span class="m">—</span>'}</div><div role="cell">${r.dias_abierto}</div></div>`).join("")
+        || `<div class="vacio">${HIS.length?"Ningún reclamo coincide con los filtros.":"Todavía no hay reclamos cerrados ni desestimados."}</div>`);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Supervisión                                                      */
+  /* ---------------------------------------------------------------- */
+  function verSupervision(){
+    $("#main").innerHTML='<div class="card vacio">Calculando…</div>';
+    server("getSupervision").then(s=>{ if(VISTA!=="supervision") return;
+      const dec=n=>n===""?"—":String(n).replace(".",",");
+      const barra=(n,max)=>`<div class="hb" style="width:${max?Math.max(2,Math.round(n/max*100)):0}%"></div>`;
+      const tabla=(titulo,cab,filas,vacio)=>`<div class="card pad"><h2 style="margin-bottom:10px">${titulo}</h2>${filas.length?`<div class="tw"><table class="t"><thead><tr>${cab.map((c,i)=>`<th${i?' class="num"':""}>${c}</th>`).join("")}</tr></thead><tbody>${filas.map(f=>`<tr>${f.map((c,i)=>`<td${i?' class="num"':""}>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`:`<div class="m">${vacio||"Sin datos todavía."}</div>`}</div>`;
+      const maxE=Math.max.apply(null, s.porEtapa.map(e=>e.cantidad).concat([1]));
+      const maxM=Math.max.apply(null, s.porMes.map(m=>Math.max(m.ingresados,m.cerrados)).concat([1]));
+      $("#main").innerHTML=`
+        <h1>Supervisión</h1>
+        <div class="kpi">
+          <div><span>Abiertos</span><b>${s.resumen.abiertos}</b></div><div><span>Cerrados</span><b>${s.resumen.cerrados}</b></div>
+          <div><span>Desestimados</span><b>${s.resumen.desestimados}</b></div><div><span>Días promedio de punta a punta</span><b>${dec(s.resumen.punta_a_punta)}</b></div>
+        </div>
+        <div class="two">
+          <div class="card pad"><h2 style="margin-bottom:10px">Reclamos abiertos por etapa</h2><table class="t"><tbody>${s.porEtapa.map(e=>`<tr><td style="width:150px">${esc(e.etapa)}</td><td>${barra(e.cantidad,maxE)}</td><td class="num" style="width:50px">${e.cantidad}</td></tr>`).join("")}</tbody></table></div>
+          ${tabla("Tiempo promedio por etapa",["Tramo","Días","Casos"],s.porTramo.map(t=>[esc(t.tramo),dec(t.dias),t.casos]))}
+          ${tabla("De punta a punta y costo, por rubro",["Rubro","Días","Cerrados","Costo total"],s.porRubro.map(t=>[esc(t.nombre),dec(t.dias),t.casos,pesos(t.costo)||"$ 0"]),"Todavía no hay reclamos cerrados.")}
+          ${tabla("De punta a punta, por urgencia",["Urgencia","Días","Cerrados"],s.porUrgencia.map(t=>[esc(t.nombre),dec(t.dias),t.casos]),"Todavía no hay reclamos cerrados.")}
+        </div>
+        <div class="card pad"><h2 style="margin-bottom:10px">Ingresados, cerrados y costo por mes</h2><div class="tw"><table class="t"><thead><tr><th>Mes</th><th>Ingresados</th><th></th><th>Cerrados</th><th></th><th class="num">Costo total</th></tr></thead>
+          <tbody>${s.porMes.map(m=>`<tr><td>${m.mes}</td><td style="width:50px">${m.ingresados}</td><td style="min-width:90px">${barra(m.ingresados,maxM)}</td><td style="width:50px">${m.cerrados}</td><td style="min-width:90px">${barra(m.cerrados,maxM)}</td><td class="num">${pesos(m.costo)||"$ 0"}</td></tr>`).join("")}</tbody></table></div></div>
+        <div class="two">
+          ${tabla("Ranking de proveedores",["Proveedor","Calif.","Realizados","En curso","Reaperturas","Demoras","Monto total"],s.ranking.map(p=>[esc(p.nombre)+(p.estado==="baja"?' <span class="p pi">De baja</span>':""),p.calificacion===""?"—":dec(p.calificacion)+" ★",p.realizados,p.en_curso,p.reaperturas,p.demoras,pesos(p.monto_total)||"$ 0"]),"Todavía no hay trabajos asignados.")}
+          ${tabla("Propiedades con más reclamos",["Propiedad","Reclamos","Abiertos"],s.propiedades.map(p=>["<b>"+pad4(p.id)+"</b> · "+esc(p.direccion),p.total,p.abiertos]))}
+        </div>
+        <div class="m">Los reclamos desestimados no cuentan en estas métricas.</div>`;
+    }).catch(fallo);
+  }
+
+  arrancar();
+})();
+</script>
+</body>
+</html>
