@@ -429,45 +429,58 @@
   /* ---------------------------------------------------------------- */
   /* Buscador de propiedad                                            */
   /* ---------------------------------------------------------------- */
-  /** Campo de propiedad: busca por ID o dirección en el padrón de Biprop. Si el ID no existe, pide la dirección para darla de alta. */
+  /**
+   * Propiedad en dos campos separados: el ID y la dirección. Si el ID ya está en el padrón de Biprop,
+   * la dirección se completa sola y no se edita. Si no está, se escribe la dirección y se da de alta con ese ID.
+   * Con el ID vacío, escribir en Dirección busca en el padrón.
+   */
   function propiedadHtml(idActual){
     const p=PROPS.filter(x=>x.id===idActual)[0];
-    return `<div class="f"><label class="l" for="pq">Propiedad</label>
-        <input id="pq" class="i" type="text" autocomplete="off" placeholder="ID de 4 cifras o dirección" value="${p?esc(pad4(p.id)+" · "+p.direccion):""}">
-        <div class="res" id="pres" hidden></div>
-        <input type="hidden" id="pid" value="${idActual||""}">
+    return `<div style="display:flex;flex-wrap:wrap;gap:14px">
+        <div class="f" style="flex:0 0 150px"><label class="l" for="pq">ID de propiedad</label>
+          <input id="pq" class="i" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="4 cifras" value="${p?pad4(p.id):(idActual?pad4(idActual):"")}"></div>
+        <div class="f" style="flex:1 1 260px"><label class="l" for="pdir">Dirección</label>
+          <input id="pdir" class="i" type="text" autocomplete="off" placeholder="Se completa sola si el ID ya está en Biprop" value="${p?esc(p.direccion):""}" ${p?"disabled":""}></div>
       </div>
-      <div id="pnueva" hidden><div class="aviso azul" style="margin-bottom:10px">Esa propiedad todavía no está en Biprop. Escribí la dirección y se da de alta con ese ID.</div>
-        ${inp("pdir","Dirección de la propiedad","")}</div>
+      <div class="res" id="pres" hidden></div>
+      <input type="hidden" id="pid" value="${idActual||""}">
+      <div id="pnueva" class="aviso azul" hidden>Esa propiedad todavía no está en Biprop. Escribí la dirección y se da de alta con ese ID.</div>
       <div id="pabiertos"></div>`;
   }
   function propiedadEnlazar(idReclamoPropio){
-    const q=$("#pq"), res=$("#pres"), pid=$("#pid");
-    const elegir=p=>{ pid.value=p.id; q.value=pad4(p.id)+" · "+p.direccion; res.hidden=true; $("#pnueva").hidden=true; mostrarAbiertos(); };
+    const q=$("#pq"), dir=$("#pdir"), res=$("#pres"), pid=$("#pid"), aviso=$("#pnueva");
     function mostrarAbiertos(){
       // Al elegir la propiedad se muestran sus reclamos abiertos, para evitar duplicados.
-      const id=Number(pid.value), otros=RECLAMOS.filter(r=>r.id_propiedad===id && r.id_reclamo!==idReclamoPropio);
+      const id=Number(pid.value), otros=id?RECLAMOS.filter(r=>r.id_propiedad===id && r.id_reclamo!==idReclamoPropio):[];
       $("#pabiertos").innerHTML=otros.length?`<div class="aviso">Esta propiedad ya tiene ${plural(otros.length,"reclamo abierto","reclamos abiertos")}:
         ${otros.map(r=>`<div style="margin-top:6px"><a href="#" data-ver="${esc(r.id_reclamo)}"><b>${esc(r.id_reclamo)}</b></a> · ${esc(r.etapa_nombre)} · ${esc(r.descripcion.slice(0,90))}</div>`).join("")}</div>`:"";
     }
+    const lista=l=>{ res.innerHTML=l.map(p=>`<button type="button" data-id="${p.id}"><b>${pad4(p.id)}</b> · ${esc(p.direccion)}</button>`).join(""); res.hidden=!l.length; };
+    // Propiedad del padrón: la dirección viene de Biprop y queda fija.
+    const fijar=p=>{ pid.value=p.id; dir.value=p.direccion; dir.disabled=true; aviso.hidden=true; };
+    const soltar=()=>{ if(dir.disabled){ dir.value=""; dir.disabled=false; } };
     q.oninput=()=>{
-      const t=norm(q.value.trim()); pid.value=""; $("#pabiertos").innerHTML="";
-      if(!t){ res.hidden=true; $("#pnueva").hidden=true; return; }
-      const esNum=/^\d{1,4}$/.test(t);
-      const lista=PROPS.filter(p=>esNum ? pad4(p.id).indexOf(t)!==-1 || String(p.id)===String(Number(t)) : norm(p.direccion).indexOf(t)!==-1).slice(0,30);
-      res.innerHTML=lista.map(p=>`<button type="button" data-id="${p.id}"><b>${pad4(p.id)}</b> · ${esc(p.direccion)}</button>`).join("");
-      res.hidden=!lista.length;
-      const exacta=esNum && PROPS.filter(p=>p.id===Number(t))[0];
-      // ID numérico que no está en el padrón: propiedad nueva.
-      const nueva=esNum && !exacta && Number(t)>=1;
-      $("#pnueva").hidden=!nueva;
-      if(nueva || exacta){ pid.value=Number(t); mostrarAbiertos(); }
+      const t=q.value.replace(/\D/g,""); if(t!==q.value) q.value=t;
+      pid.value=""; aviso.hidden=true;
+      if(!t){ soltar(); lista([]); mostrarAbiertos(); return; }
+      const n=Number(t), exacta=PROPS.filter(p=>p.id===n)[0];
+      lista(PROPS.filter(p=>p.id!==n && pad4(p.id).indexOf(t)!==-1).slice(0,20));
+      if(exacta) fijar(exacta);
+      else { soltar(); if(n>=1){ pid.value=n; aviso.hidden=false; } }
+      mostrarAbiertos();
     };
-    res.onclick=e=>{ const b=e.target.closest("button"); if(b) elegir(PROPS.filter(p=>p.id===Number(b.dataset.id))[0]); };
+    dir.oninput=()=>{
+      // Solo busca por dirección cuando todavía no hay un ID escrito.
+      if(q.value){ lista([]); return; }
+      const t=norm(dir.value.trim());
+      lista(t.length>=2?PROPS.filter(p=>norm(p.direccion).indexOf(t)!==-1).slice(0,20):[]);
+    };
+    res.onclick=e=>{ const b=e.target.closest("button"); if(!b) return;
+      const p=PROPS.filter(x=>x.id===Number(b.dataset.id))[0]; q.value=pad4(p.id); fijar(p); lista([]); mostrarAbiertos(); };
     $("#pabiertos").onclick=e=>{ const v=e.target.dataset.ver; if(v){ e.preventDefault(); ir("ficha", v); } };
     mostrarAbiertos();
   }
-  const propiedadDatos = () => ({ id_propiedad: val("pid"), direccion_nueva: $("#pnueva").hidden ? "" : val("pdir") });
+  const propiedadDatos = () => ({ id_propiedad: val("pid"), direccion_nueva: $("#pdir").disabled ? "" : val("pdir") });
 
   function ingresoHtml(r){
     const quien=r?r.quien_reclama:"Inquilino";
@@ -514,7 +527,7 @@
     ["nFiles","nFilesCam"].forEach(id=>{ $("#"+id).onchange=e=>{ PEND=PEND.concat([...e.target.files]); e.target.value=""; pintarPend(); }; });
     $("#nGuardar").onclick=async()=>{
       const d=ingresoDatos();
-      if(!d.id_propiedad){ toast("Elegí la propiedad.", true); return; }
+      if(!d.id_propiedad){ toast("Escribí el ID de la propiedad.", true); return; }
       if(base) d.reclamo_origen=base.id_reclamo;
       busy(true, "Guardando el reclamo…");
       try{
@@ -852,7 +865,7 @@
   async function guardarEtapa(n){
     const r=F.reclamo, id=r.id_reclamo;
     if(n===1){
-      const d=ingresoDatos(); if(!d.id_propiedad){ toast("Elegí la propiedad.", true); return; }
+      const d=ingresoDatos(); if(!d.id_propiedad){ toast("Escribí el ID de la propiedad.", true); return; }
       busy(true,"Guardando…"); const res=await server("guardarIngreso", id, d); usarFicha(res, "Ingreso actualizado.", res.aviso);
     }
     else if(n===2){
